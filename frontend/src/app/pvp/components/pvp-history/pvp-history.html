@@ -1,0 +1,48 @@
+<div class="history-wrapper">
+  <header class="history-nav">
+    <button class="btn-back" (click)="goBack()"><i class="fas fa-arrow-left"></i></button>
+    <h1>📜 Lịch Sử Đấu Trường</h1>
+  </header>
+
+  <div class="loading-screen" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Đang tải lịch sử...</p>
+  </div>
+
+  <section class="history-list" *ngIf="!isLoading">
+    <div class="history-card" *ngFor="let battle of history" (click)="viewResult(battle.id)">
+      <div class="battle-main">
+        <div class="players-info">
+          <div class="player">
+            <span class="player-name">{{ battle.challenger.username }}</span>
+            <span class="vs">VS</span>
+            <span class="player-name">{{ battle.opponent.username }}</span>
+          </div>
+          <div class="battle-meta">
+            <span class="grade-badge">Khối {{ battle.grade_level }}</span>
+            <span class="date-text">{{ battle.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+
+        <div class="battle-outcome" [ngClass]="battle.status">
+          <span class="status-label">{{ getOutcome(battle) }}</span>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+      </div>
+      
+      <div class="battle-stats" *ngIf="battle.results && battle.results.length > 0">
+        <div class="stat-row" *ngFor="let res of battle.results">
+          <span class="stat-player">{{ res.player.username }}:</span>
+          <span class="stat-val">{{ res.score }} điểm</span>
+          <span class="stat-correct">({{ res.correct_count }}/5 đúng)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="history.length === 0">
+      <i class="fas fa-scroll-old"></i>
+      <p>Bạn chưa tham gia trận đấu nào.</p>
+      <button class="btn-primary" (click)="goBack()">Tìm đối thủ ngay</button>
+    </div>
+  </section>
+</div>

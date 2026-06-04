@@ -1,0 +1,379 @@
+<!-- LOADING SKELETON: Shown while fetching first subject data -->
+<div class="loading-skeleton" *ngIf="isInitialLoading && !subject">
+  <nav class="navbar-mini skeleton-nav">
+    <div class="nav-container-mini">
+      <div class="skeleton-pixel logo-placeholder"></div>
+      <div class="skeleton-pixel breadcrumb-placeholder"></div>
+    </div>
+  </nav>
+  <div class="split-container skeleton-body">
+    <div class="textbook-panel skeleton-aside">
+      <div class="skeleton-pixel sidebar-title"></div>
+      <div class="skeleton-pixel sidebar-item" *ngFor="let i of [1,2,3,4]"></div>
+    </div>
+    <div class="chat-container skeleton-main">
+      <div class="loading-indicator-overlay">
+        <i class="fas fa-circle-notch fa-spin"></i> Đang thiết lập không gian học tập...
+      </div>
+      <div class="skeleton-pixel content-title"></div>
+      <div class="skeleton-pixel content-line" style="width: 80%"></div>
+      <div class="skeleton-pixel content-line" style="width: 60%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ERROR STATE -->
+<div class="error-state" *ngIf="errorLoading && !subject">
+  <div class="error-card">
+    <i class="fas fa-exclamation-circle error-icon"></i>
+    <h2>Không thể tải môn học</h2>
+    <p>Rất tiếc, đã có lỗi xảy ra khi tải nội dung bài học. Vui lòng kiểm tra lại kết nối hoặc thử lại sau.</p>
+    <pre style="text-align: left; background: #ffeeee; color: red; padding: 10px; font-size: 12px; margin-top: 10px;">{{ debugMessage }}</pre>
+    <button class="btn-retry" routerLink="/dashboard">Quay lại Dashboard</button>
+  </div>
+</div>
+
+<!-- =============================================
+     MAIN WORKSPACE — GEMINI-STYLE LAYOUT
+     ============================================= -->
+<div class="workspace-wrapper" *ngIf="subject">
+
+  <!-- ===== LEFT SIDEBAR (Gemini-style) ===== -->
+  <aside class="left-sidebar" [class.collapsed]="!isSidebarVisible">
+    <!-- Logo & Toggle -->
+    <div class="ls-header">
+      <button class="btn-ls-toggle" (click)="toggleSidebar()" title="Đóng thanh bên">
+        <i class="fas fa-bars"></i>
+      </button>
+      <span class="ls-logo" routerLink="/dashboard">
+        <i class="fas fa-graduation-cap"></i>
+        <span class="ls-logo-text">EduTutor</span>
+      </span>
+    </div>
+
+    <!-- New Chat -->
+    <button class="btn-new-chat" (click)="startNewChat()">
+      <i class="fas fa-pen-to-square"></i>
+      <span>Cuộc trò chuyện mới</span>
+    </button>
+
+    <!-- Chat History / Threads list -->
+    <ng-container *ngIf="threads.length > 0">
+      <div class="ls-section-label" style="margin-top: 15px;"><span>Lịch sử gần đây</span></div>
+      <nav class="ls-threads" style="max-height: 200px; overflow-y: auto;">
+        <button
+          *ngFor="let thread of threads"
+          class="ls-thread-btn ls-func-btn"
+          [class.active]="currentThreadId === thread.id"
+          (click)="selectThread(thread.id)"
+          [title]="thread.title"
+          style="width: 100%; display: flex; align-items: center; justify-content: flex-start; gap: 10px; padding: 10px 15px; border-radius: 8px; border: none; background: transparent; cursor: pointer; color: var(--text-2); text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+          <i class="far fa-message"></i>
+          <span class="ls-thread-title" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ thread.title }}</span>
+        </button>
+      </nav>
+      <div class="ls-divider"></div>
+    </ng-container>
+
+    <!-- Smart Functions -->
+    <div class="ls-section-label"><span>Chức năng AI</span></div>
+    <nav class="ls-functions">
+      <button class="ls-func-btn" [routerLink]="['/quiz-practice', subject.id, selectedDocId]">
+        <i class="fas fa-bolt-lightning"></i>
+        <span>Luyện tập AI</span>
+      </button>
+      <button class="ls-func-btn" *ngIf="pathId" [routerLink]="['/learning-path', pathId]">
+        <i class="fas fa-route"></i>
+        <span>Xem lộ trình cá nhân</span>
+      </button>
+      <button class="ls-func-btn" *ngIf="!pathId" (click)="newMessage='Hãy lập lộ trình học tập cá nhân cho tôi dựa trên cuốn sách này'; sendMessage()">
+        <i class="fas fa-route"></i>
+        <span>Tạo lộ trình học cho cả SGK</span>
+      </button>
+      <button class="ls-func-btn" (click)="toggleBookPanel()">
+        <i class="fas fa-book-open"></i>
+        <span>{{ isBookPanelOpen ? 'Ẩn sách giáo khoa' : 'Xem sách giáo khoa' }}</span>
+      </button>
+    </nav>
+
+    <!-- Divider -->
+    <div class="ls-divider"></div>
+
+    <!-- Chat Documents / History label -->
+    <div class="ls-section-label"><span>Tài liệu môn học</span></div>
+    <nav class="ls-docs">
+      <button
+        *ngFor="let doc of subject.documents"
+        class="ls-doc-btn"
+        [class.active]="selectedDocument?.id === doc.id"
+        (click)="selectDocument(doc)">
+        <i class="fas fa-file-lines"></i>
+        <span class="ls-doc-title">{{ doc.title }}</span>
+      </button>
+    </nav>
+
+    <!-- Bottom actions -->
+    <div class="ls-footer">
+      <button class="ls-bottom-btn" routerLink="/dashboard">
+        <i class="fas fa-arrow-left"></i>
+        <span>Về Dashboard</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT AREA ===== -->
+  <div class="main-area">
+
+    <!-- === Chat Panel (always visible) === -->
+    <section class="chat-main" [class.book-open]="isBookPanelOpen">
+
+      <!-- Chat Header -->
+      <header class="chat-header">
+        <!-- Left: Hamburger + Subject name -->
+        <div class="ch-left">
+          <button class="btn-hamburger" (click)="toggleSidebar()" title="Mở/Đóng thanh bên" *ngIf="!isSidebarVisible">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="ch-subject-info">
+            <span class="ch-subject-name">{{ subject.name }}</span>
+            <span class="ch-doc-name" *ngIf="selectedDocument">• {{ selectedDocument.title }}</span>
+          </div>
+        </div>
+        <!-- Right: Actions -->
+        <div class="ch-right">
+          <button class="btn-ch-action" [class.active]="isBookPanelOpen" (click)="toggleBookPanel()" title="Xem/Ẩn sách giáo khoa">
+            <i class="fas fa-book-open"></i>
+          </button>
+          <button class="btn-ch-action danger" title="Xóa lịch sử" (click)="clearChat()">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Chat Viewport -->
+      <div class="chat-viewport" #scrollContainer>
+
+        <!-- Welcome screen -->
+        <div class="chat-welcome" *ngIf="messages.length === 0">
+          <div class="welcome-icon"><i class="fas fa-robot"></i></div>
+          <h2>Xin chào! Tôi là <strong>AI Tutor</strong></h2>
+          <p>Tôi sẵn sàng hỗ trợ bạn học<strong> {{ selectedDocument?.title || subject.name }}</strong>. Hỏi tôi bất cứ điều gì!</p>
+          <div class="quick-prompts">
+            <!-- <button class="quick-btn" (click)="newMessage = 'Giải thích cho mình phần này với'; sendMessage()">💡 Giảng bài</button>
+            <button class="quick-btn" (click)="newMessage = 'Cho mình bài tập ví dụ'; sendMessage()">✏️ Bài tập ví dụ</button>
+            <button class="quick-btn" *ngIf="pathId" [routerLink]="['/learning-path', pathId]">🏆 Lộ trình của tôi</button>
+            <button class="quick-btn" *ngIf="!pathId" (click)="newMessage = 'Lên lộ trình học tập chi tiết môn này'; sendMessage()">🏆 Lộ trình</button> -->
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div *ngFor="let msg of messages" class="message-wrapper" [ngClass]="msg.role"
+             [style.display]="(msg.role === 'assistant' && !msg.content && !msg.statusText && isLoading) ? 'none' : ''">
+          <div class="message-meta" *ngIf="msg.role === 'assistant'">
+            <div class="mini-hex"><i class="fas fa-robot"></i></div>
+            <span>AI Tutor</span>
+          </div>
+          <div class="message-bubble">
+            <img *ngIf="msg.imageUrl" [src]="msg.imageUrl" class="chat-attached-img" alt="Attached image">
+            <!-- Status chip shown while streaming (tool running) -->
+            <div class="ai-status-chip" *ngIf="msg.statusText && !msg.content">
+              <span class="status-spinner"></span>{{ msg.statusText }}
+            </div>
+            <div class="prose-ai" [innerHTML]="msg.safeHtml"></div>
+            
+            <!-- [NEW] Hiển thị trích dẫn (Grounding Chips) -->
+            <div class="citation-container" *ngIf="msg.citations && msg.citations.length > 0">
+              <span class="citation-label">Nguồn tham khảo:</span>
+              <div class="citation-chips">
+                <button *ngFor="let cit of msg.citations" class="citation-chip" (click)="viewSource(cit)" [title]="'Xem trang ' + cit.page">
+                  <i class="fas fa-book"></i>
+                  <span class="cit-text">{{ cit.title }} (Trang {{ cit.page }})</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Typing indicator (shown ONLY when nothing is streaming yet) -->
+        <div *ngIf="isLoading && messages.length > 0 && messages[messages.length-1].role === 'user'" class="message-wrapper assistant">
+          <div class="message-meta">
+            <div class="mini-hex"><i class="fas fa-robot"></i></div>
+            <span>AI Tutor đang soạn câu trả lời...</span>
+          </div>
+          <div class="typing-indicator"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="chat-controls">
+        <!-- Image preview -->
+        <div class="image-preview" *ngIf="attachedImage">
+          <img [src]="attachedImage" alt="Preview">
+          <button class="btn-remove-img" (click)="removeAttachedImage()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Input Box (Gemini-style) -->
+        <div class="input-wrapper">
+          <!-- Tools menu backdrop (close on outside click) -->
+          <div class="tools-menu-backdrop" *ngIf="isToolsMenuOpen" (click)="closeToolsMenu()"></div>
+
+          <!-- Tools popup menu -->
+          <div class="tools-menu" [class.open]="isToolsMenuOpen">
+            <div class="tools-menu-item" (click)="fileInput.click(); closeToolsMenu()">
+              <i class="fas fa-image"></i> <span>Đính kèm ảnh</span>
+            </div>
+            <div class="tools-menu-item" [routerLink]="['/quiz-practice', subject.id, selectedDocId]" (click)="closeToolsMenu()">
+              <i class="fas fa-bolt-lightning"></i> <span>Luyện tập AI</span>
+            </div>
+            <div class="tools-menu-item" *ngIf="pathId" [routerLink]="['/learning-path', pathId]" (click)="closeToolsMenu()">
+              <i class="fas fa-route"></i> <span>Xem lộ trình cá nhân</span>
+            </div>
+            <div class="tools-menu-item" *ngIf="!pathId" (click)="newMessage='Hãy lập lộ trình học tập cá nhân cho tôi dựa trên cuốn sách này'; sendMessage(); closeToolsMenu()">
+              <i class="fas fa-route"></i> <span>Tạo lộ trình học</span>
+            </div>
+          </div>
+
+          <div class="input-container">
+            <button class="btn-plus" (click)="toggleToolsMenu()" [class.active]="isToolsMenuOpen" title="Công cụ">
+              <i class="fas" [ngClass]="isToolsMenuOpen ? 'fa-xmark' : 'fa-plus'"></i>
+            </button>
+            <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none;">
+            <input #messageInput type="text" [(ngModel)]="newMessage" (keyup.enter)="sendMessage(); closeToolsMenu()"
+              (paste)="onPaste($event)"
+              placeholder="Hỏi AI Tutor về bài học...">
+            <button class="btn-send-round" (click)="sendMessage()" [disabled]="!newMessage.trim() && !attachedImage">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+          <p class="chat-footer-note">AI Tutor có thể đưa ra câu trả lời chưa chính xác. Hãy kiểm tra lại kiến thức quan trọng.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- === Book Panel (slide from right, optional) === -->
+    <aside class="book-panel" [class.open]="isBookPanelOpen">
+      <div class="book-panel-inner">
+
+        <!-- Book Panel Header -->
+        <div class="bp-header">
+          <button class="btn-close-book" (click)="toggleBookPanel()" title="Ẩn sách">
+            <i class="fas fa-xmark"></i>
+          </button>
+          <div class="bp-title-block">
+            <span class="bp-subject">{{ subject.name }}</span>
+          </div>
+        </div>
+
+
+        <!-- PDF Viewer -->
+        <div class="bp-content" *ngIf="selectedDocument">
+          <ng-container *ngIf="selectedDocument.pdf_file">
+            <div *ngIf="!showPdf" class="pdf-placeholder">
+              <button class="btn-primary-glow" (click)="showPdf = true">
+                <i class="fas fa-book-reader"></i> Mở xem SGK
+              </button>
+            </div>
+            <iframe *ngIf="showPdf" [src]="currentSafePdfUrl" width="100%" height="100%" style="border: none;">
+              <p>Trình duyệt của bạn không hỗ trợ đọc PDF. <a [href]="selectedDocument?.pdf_file" target="_blank">Tải sách xuống</a>.</p>
+            </iframe>
+          </ng-container>
+          <article *ngIf="!selectedDocument.pdf_file" class="prose-content"
+            [innerHTML]="selectedDocument.content || 'Nội dung sách này đã được số hóa trên Vertex AI Agent Builder. Hãy trò chuyện với AI để tra cứu.'">
+          </article>
+        </div>
+
+        <!-- Empty state -->
+        <div class="bp-empty" *ngIf="!selectedDocument">
+          <i class="fas fa-book-open"></i>
+          <p>Chưa chọn tài liệu nào</p>
+        </div>
+      </div>
+    </aside>
+
+  </div><!-- end .main-area -->
+</div><!-- end .workspace-wrapper -->
+
+<!-- PREMIUM DELETE MODAL -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="cancelDelete()">
+  <div class="modal-card animate-zoom" (click)="$event.stopPropagation()">
+    <div class="modal-icon-wrapper">
+      <div class="trash-pulse"><i class="fas fa-trash-alt"></i></div>
+    </div>
+    <div class="modal-header">
+      <h2>Xóa lịch sử trò chuyện?</h2>
+      <p>Hành động này sẽ xóa vĩnh viễn toàn bộ tin nhắn trong không gian học tập này. Bạn chắc chắn chứ?</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="cancelDelete()">Hủy bỏ</button>
+      <button class="btn-delete-confirm" (click)="confirmDelete()">
+        <i class="fas fa-check"></i> Xác nhận xóa
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* STYLE BỔ SUNG CHO CÁC THẺ TRÍCH DẪN (SOURCE CHIPS) */
+.citation-container {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(var(--primary-rgb), 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.citation-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.citation-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.citation-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(var(--primary-rgb), 0.05);
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 12px;
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.citation-chip:hover {
+  background: rgba(var(--primary-rgb), 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.15);
+  transform: translateY(-1px);
+}
+
+.citation-chip i {
+  font-size: 10px;
+}
+
+.citation-chip .cit-text {
+  font-weight: 500;
+}
+
+/* Hiệu ứng mờ dần cho chip mới xuất hiện */
+.citation-chip {
+  animation: chipFadeIn 0.3s ease forwards;
+}
+
+@keyframes chipFadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+</style>

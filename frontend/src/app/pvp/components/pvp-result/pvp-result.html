@@ -1,0 +1,33 @@
+<div class="result-wrapper">
+  <div class="loading-screen" *ngIf="isLoading">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="result-card" *ngIf="result && !isLoading">
+    <!-- Outcome Banner -->
+    <div class="outcome-banner" [class.win]="isWin" [class.draw]="result.is_draw" [class.lose]="!isWin && !result.is_draw">
+      <h1 class="outcome-label">{{ outcomeLabel }}</h1>
+    </div>
+
+    <!-- Score Comparison -->
+    <div class="score-compare">
+      <div class="score-block mine">
+        <span class="score-label">Điểm của bạn</span>
+        <span class="score-number">{{ result.your_score ?? 0 }}</span>
+        <span class="correct-label">{{ result.your_correct ?? 0 }} câu đúng</span>
+      </div>
+      <div class="vs-divider">VS</div>
+      <div class="score-block opponent">
+        <span class="score-label">Đối thủ</span>
+        <span class="score-number">{{ result.opponent_score ?? 0 }}</span>
+        <span class="correct-label">{{ result.opponent_correct ?? 0 }} câu đúng</span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="result-actions">
+      <button class="btn-rematch" (click)="rematch()">⚔️ Thách Đấu Lại</button>
+      <button class="btn-arena" (click)="goArena()">🏰 Về Đấu Trường</button>
+    </div>
+  </div>
+</div>

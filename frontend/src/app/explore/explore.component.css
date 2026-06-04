@@ -1,0 +1,270 @@
+/* ============================================================
+   KNOWLEDGE QUEST: THE IMMERSIVE BADGE MUSEUM CSS
+   ============================================================ */
+:host {
+  --primary: #5C57D9;
+  --ocean: #14172B;
+  --gold: #FFD700;
+  --scroll-bg: #f5e6ba;
+  --title-font: 'Pirata One', cursive;
+  --content-font: 'MedievalSharp', cursive;
+  --modern-font: 'Outfit', sans-serif;
+}
+
+.explore-world {
+  background: #0f111a;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  color: white;
+  font-family: var(--modern-font);
+}
+
+/* 1. SKY LAYER */
+.sky-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.cloud {
+  position: absolute;
+  width: 200px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50px;
+  filter: blur(20px);
+  animation: moveCloud 20s linear infinite;
+}
+
+@keyframes moveCloud {
+  from { left: -200px; }
+  to { left: 100%; }
+}
+
+/* 2. NAVBAR */
+.fantasy-nav {
+  position: relative;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border-bottom: 2px solid rgba(92, 87, 217, 0.3);
+}
+
+.nav-brand {
+  font-family: var(--title-font);
+  font-size: 2.2rem;
+  color: var(--gold);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.nav-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.nav-btn.accent { background: var(--primary); border-color: var(--primary); }
+
+/* 3. MUSEUM GALLERY STAGE */
+.main-stage {
+  display: flex;
+  padding: 30px;
+  height: calc(100vh - 90px);
+  gap: 30px;
+  position: relative;
+  z-index: 5;
+}
+
+.map-canvas.gallery-mode {
+  flex: 1;
+  background: transparent;
+  border: 4px solid rgba(255, 215, 0, 0.15);
+  border-radius: 24px;
+  position: relative;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 150px;
+}
+
+.gallery-floor {
+  position: absolute;
+  bottom: 0; width: 100%; height: 200px;
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.6));
+  pointer-events: none;
+}
+
+/* Badge Display */
+.badge-node {
+  position: absolute;
+  width: 160px;
+  height: 180px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.badge-item {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.badge-icon {
+  width: 90px;
+  height: 90px;
+  background: radial-gradient(circle, #f39c12, #d35400);
+  border: 4px solid var(--gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.8rem;
+  color: white;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+  transition: 0.4s;
+  margin-bottom: 5px;
+}
+
+.badge-icon img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+
+.badge-label {
+  font-family: var(--content-font);
+  color: var(--gold);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  text-align: center;
+  font-size: 0.9rem;
+  max-width: 140px;
+}
+
+.badge-node.locked .badge-icon { 
+  filter: grayscale(1) opacity(0.5) brightness(0.8); 
+  border-color: rgba(255,255,255,0.2);
+  background: #333;
+}
+.badge-node:hover .badge-icon { transform: scale(1.1) translateY(-15px); filter: grayscale(0); box-shadow: 0 0 40px var(--gold); }
+
+/* Center Monument */
+.monument-wrapper {
+  padding: 60px 0 30px;
+  text-align: center;
+  z-index: 100;
+  position: sticky;
+  top: 0;
+  background: #0f111a;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.monument-statue { font-size: 4rem; color: var(--gold); filter: drop-shadow(0 0 20px var(--gold)); margin-bottom: 10px; }
+.monument-title { font-family: var(--title-font); font-size: 5rem; color: white; letter-spacing: 8px; text-shadow: 0 0 20px rgba(0,0,0,1); line-height: 1; }
+.monument-subtitle { font-family: var(--modern-font); font-size: 1.2rem; color: var(--gold); opacity: 0.8; letter-spacing: 2px; text-transform: uppercase; margin-top: 10px; }
+
+/* Sidebar Stats - Clean & Modern */
+.quest-sidebar.mini {
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-shelf {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 20px;
+  padding: 20px 10px;
+  backdrop-filter: blur(10px);
+}
+
+.shelf-title {
+  font-family: var(--title-font);
+  color: var(--gold);
+  font-size: 1.5rem;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.stat-box {
+  text-align: center;
+}
+
+.stat-num {
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stat-num.highlight { color: var(--gold); }
+
+.stat-text {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.6;
+  margin-top: 5px;
+}
+
+.stat-divider {
+  width: 40px;
+  height: 1px;
+  background: rgba(255, 215, 0, 0.2);
+}
+
+/* Modal */
+.mythic-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+.quest-parchment { background: var(--scroll-bg) url('https://www.transparenttextures.com/patterns/old-map.png'); width: 90%; max-width: 650px; padding: 60px; border-radius: 4px; position: relative; clip-path: polygon(0 2%, 100% 0, 98% 100%, 2% 98%); }
+.parchment-header { text-align: center; margin-bottom: 40px; color: #3e2723; }
+.parchment-header h1 { font-size: 2.8rem; margin-bottom: 10px; font-family: var(--title-font); }
+.parchment-header i { font-size: 2rem; color: var(--gold); margin-bottom: 10px; }
+
+.close-parchment { position: absolute; top: 25px; right: 25px; background: none; border: none; font-size: 2.2rem; color: #3e2723; cursor: pointer; z-index: 10; }
+
+.badge-large-preview {
+  width: 180px; height: 180px; margin: 0 auto 30px;
+  background: radial-gradient(circle, #f39c12, #d35400);
+  border: 4px solid var(--gold);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 6rem; color: white;
+}
+.badge-large-preview.locked { filter: grayscale(1); opacity: 0.5; }
+
+.badge-desc { color: #5d4037; font-size: 1.2rem; text-align: center; margin-bottom: 30px; line-height: 1.6; }
+
+.requirement-box { background: rgba(0,0,0,0.05); padding: 25px; border-radius: 12px; border: 2px dashed #5d4037; margin-top: 20px; color: #3e2723; }
+.requirement-box h3 { margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; color: #3e2723; font-weight: bold; font-size: 1.3rem; }
+.requirement-box p { color: #5d4037; font-size: 1.1rem; text-align: center; }
+
+.earned-box { background: rgba(46, 125, 50, 0.1); padding: 25px; border-radius: 12px; border: 2px solid #2e7d32; color: #1b5e20; margin-top: 20px; text-align: center; }
+.earned-box p { margin-bottom: 5px; font-weight: 500; }
+
+.btn-seal { width: 100%; margin-top: 40px; padding: 20px; background: #3e2723; color: var(--gold); border: none; font-family: var(--title-font); font-size: 1.8rem; cursor: pointer; }
+
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+.animate-float { animation: float 4s ease-in-out infinite; }

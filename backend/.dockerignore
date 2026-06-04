@@ -1,0 +1,15 @@
+venv
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+instance/
+.pytest_cache
+.vscode
+.git
+staticfiles
+media
+*.log

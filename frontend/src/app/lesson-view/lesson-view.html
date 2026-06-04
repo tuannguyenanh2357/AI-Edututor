@@ -1,0 +1,160 @@
+<div class="lesson-page" *ngIf="!isLoading && learningPath && currentItem">
+
+  <!-- ══════ STUDY GUIDE (Collapsible Left Panel) ══════ -->
+  <aside class="study-sidebar" [class.collapsed]="isSidebarCollapsed">
+    <div class="sidebar-header">
+      <button class="btn-toggle-sidebar" (click)="toggleSidebar()">
+        <i class="fas" [ngClass]="isSidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
+      </button>
+      <div class="sidebar-title-group" *ngIf="!isSidebarCollapsed">
+        <span class="sidebar-label">Hướng dẫn học</span>
+      </div>
+    </div>
+
+    <div class="sidebar-content" *ngIf="!isSidebarCollapsed">
+      <!-- Lesson Info -->
+      <div class="info-card">
+        <span class="info-tag">{{ learningPath.subject_name }}</span>
+        <h2 class="lesson-title-sidebar">{{ currentItem.lesson_title || currentItem.quiz_title }}</h2>
+        <p class="chapter-name" style="font-size: 0.85rem; color: #94a3b8; margin: 0;">
+          <i class="fas fa-bookmark"></i> 
+          Chương: {{ currentItem.chapter_name || 'Kiến thức trọng tâm' }}
+        </p>
+      </div>
+
+      <!-- Mastery Indicator -->
+      <div class="mastery-card" *ngIf="currentItem.mastery_level">
+        <div class="mastery-header">
+          <i class="fas fa-signal"></i> Mức độ thành thạo
+        </div>
+        <div class="mastery-bar">
+          <div class="mastery-level" 
+               [class.level-red]="currentItem.mastery_level === 'RED'"
+               [class.level-yellow]="currentItem.mastery_level === 'YELLOW'"
+               [class.level-green]="currentItem.mastery_level === 'GREEN'">
+            {{ currentItem.mastery_level === 'RED' ? 'Cần học kỹ' : (currentItem.mastery_level === 'YELLOW' ? 'Cần ôn tập' : 'Đã vững') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Learning Methodology -->
+      <div class="method-card">
+        <h4 class="method-title"><i class="fas fa-lightbulb"></i> Phương pháp học</h4>
+        <div class="method-steps">
+          <div class="method-step" [class.active]="activeStep >= 1">
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <strong>Hỏi AI Tutor</strong>
+              <span>Đặt câu hỏi về bài học, AI sẽ giảng giải cá nhân hóa</span>
+            </div>
+          </div>
+          <div class="method-step" [class.active]="activeStep >= 2">
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <strong>Kiểm tra kiến thức</strong>
+              <span>Hoàn thành bài và làm Chapter Test</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Prompts -->
+      <div class="quick-prompts">
+        <h4 class="prompts-title"><i class="fas fa-magic"></i> Gợi ý hỏi AI</h4>
+        <button class="prompt-chip" (click)="sendQuickPrompt('Giảng giải bài này cho tôi từ đầu')">
+          📖 Giảng từ đầu
+        </button>
+
+        <button class="prompt-chip" (click)="sendQuickPrompt('Tóm tắt kiến thức trọng tâm')">
+          📝 Tóm tắt
+        </button>
+        <button class="prompt-chip" (click)="sendQuickPrompt('Cho tôi 3 bài tập luyện')">
+          ✏️ Bài tập
+        </button>
+      </div>
+
+      <!-- Reference Materials -->
+      <!-- <div class="ref-card" *ngIf="safePdfUrl">
+        <h4 class="ref-title"><i class="fas fa-book"></i> Tài liệu tham khảo</h4>
+        <button class="ref-btn" (click)="togglePdf()">
+          <i class="fas fa-file-pdf"></i>
+          {{ showPdf ? 'Ẩn sách giáo khoa' : 'Mở sách giáo khoa' }}
+        </button>
+      </div> -->
+
+      <!-- Action Buttons -->
+      <!-- <div class="sidebar-actions">
+        <button class="btn-chapter-test" (click)="goToChapterTest()">
+          <i class="fas fa-clipboard-check"></i> Kiểm tra Chương
+        </button>
+        <button (click)="completeLesson()" [disabled]="isCompleting" class="btn-complete-lesson">
+          <span *ngIf="!isCompleting">
+            <i class="fas fa-check-circle"></i> Hoàn thành bài học
+          </span>
+          <span *ngIf="isCompleting" class="spinner-small"></span>
+        </button>
+      </div> -->
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="btn-dashboard" routerLink="/dashboard" [attr.title]="isSidebarCollapsed ? 'Quay lại dashboard' : null">
+        <i class="fas fa-chevron-left"></i>
+        <span *ngIf="!isSidebarCollapsed">Quay lại dashboard</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ══════ MAIN LEARNING AREA (AI Chat) ══════ -->
+  <main class="learning-main">
+    <!-- Top Bar -->
+    <header class="learning-topbar">
+      <div class="topbar-left">
+        <button class="btn-back" [routerLink]="['/learning-path', pathId]">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="topbar-info">
+          <span class="topbar-subject">{{ learningPath.subject_name }}</span>
+          <span class="topbar-lesson">{{ currentItem.lesson_title || currentItem.quiz_title }}</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button (click)="completeLesson()" [disabled]="isCompleting" class="btn-complete-topbar" *ngIf="!isCompleting">
+          <i class="fas fa-check-circle"></i> <span>Hoàn thành</span>
+        </button>
+        <button class="btn-toggle-sidebar-mobile" (click)="toggleSidebar()">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- PDF Viewer (Toggled) -->
+    <div class="pdf-overlay" *ngIf="showPdf && safePdfUrl">
+      <div class="pdf-panel">
+        <div class="pdf-header">
+          <h3><i class="fas fa-book"></i> Sách giáo khoa</h3>
+          <button class="btn-close-pdf" (click)="togglePdf()"><i class="fas fa-times"></i></button>
+        </div>
+        <iframe [src]="safePdfUrl" width="100%" height="100%" frameborder="0"></iframe>
+      </div>
+    </div>
+
+    <!-- AI Tutor Chat (PRIMARY LEARNING TOOL) -->
+    <div class="chat-container">
+      <app-chat 
+          [isEmbedded]="true" 
+          [subjectId]="learningPath.subject" 
+          [lessonContext]="lessonContext">
+      </app-chat>
+    </div>
+  </main>
+
+</div>
+
+<!-- LOADING STATE -->
+<div class="lesson-loading" *ngIf="isLoading">
+  <div class="loader-orbit">
+    <div class="orbit"></div>
+    <div class="center-dot"></div>
+  </div>
+  <p>Đang chuẩn bị không gian học tập...</p>
+</div>

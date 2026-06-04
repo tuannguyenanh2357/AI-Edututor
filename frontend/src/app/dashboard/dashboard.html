@@ -1,0 +1,119 @@
+<!-- ===== ANNOUNCEMENT BAR ===== -->
+<div class="announcement-bar animate-in">
+  <span>🎓 AI Tutor — Nền tảng học tập thông minh dành cho học sinh THPT.
+    <a routerLink="/select-subject">Bắt đầu lộ trình ngay hôm nay!</a>
+  </span>
+</div>
+
+<!-- ===== PRIMARY NAVBAR ===== -->
+<nav class="navbar animate-in" style="animation-delay: 0.1s">
+  <div class="nav-container">
+    <div class="logo">
+      <i class="fas fa-graduation-cap"></i> AI Tutor
+    </div>
+    <div class="nav-links">
+      <a routerLink="/dashboard" class="active">Học tập</a>
+      <a routerLink="/explore">Khám phá</a>
+      <a routerLink="/arena" class="arena-link"><i class="fas fa-trophy"></i> Đấu trường</a>
+      <a (click)="onQuizSelect()">Luyện tập AI</a>
+
+    </div>
+    <div class="nav-tools">
+      <app-pvp-notification-bell></app-pvp-notification-bell>
+      <div class="points-badge"><i class="fas fa-fire"></i> {{streak}}</div>
+      <div class="user-avatar-small" routerLink="/profile">
+        <img [src]="getAvatarUrl()" (error)="handleImageError($event)" alt="Avatar">
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ===== MAIN WRAPPER ===== -->
+<div class="exercism-wrapper">
+
+  <!-- Welcome Hero -->
+  <section class="welcome-banner animate-in" style="animation-delay: 0.3s">
+    <div class="welcome-icon"><i class="fas fa-robot"></i></div>
+    <div class="welcome-text">
+      <h1>Chào mừng trở lại, {{userName}}!</h1>
+      <p>Luyện tập các bài tập và nhận hướng dẫn từ AI để thành thạo các môn học. <strong>AI Tutor</strong> là nền tảng học tập dành cho học sinh THPT Việt Nam.</p>
+    </div>
+  </section>
+
+  <!-- ===== QUICK-START CARDS ===== -->
+  <section class="quick-start-section animate-in" style="animation-delay: 0.4s">
+    <h2>Hãy bắt đầu từ đâu đây...</h2>
+    <div class="quick-start-grid">
+      <div class="quick-card" routerLink="/select-subject">
+        <div class="card-icon"><span class="qi blue"><i class="fas fa-magic"></i></span></div>
+        <h3>Xây dựng lộ trình học cùng AI</h3>
+      </div>
+
+      <div class="quick-card" (click)="onQuizSelect()">
+        <div class="card-icon"><span class="qi orange"><i class="fas fa-clipboard-check"></i></span></div>
+        <h3>Luyện tập AI từ sách giáo khoa</h3>
+      </div>
+      <div class="quick-card arena-card" routerLink="/arena">
+        <div class="card-icon"><span class="qi gold"><i class="fas fa-fire"></i></span></div>
+        <h3>Đấu trường Tri thức & Quà tặng</h3>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TRACKS BROWSER (SUBJECTS) ===== -->
+  <section class="tracks-section animate-in" style="animation-delay: 0.5s">
+    <div class="tracks-header">
+      <div class="tracks-title-group">
+        <h2>Môn học</h2>
+        <span class="tracks-count" *ngIf="filteredSubjects.length > 0">{{filteredSubjects.length}} môn học</span>
+      </div>
+      <!-- Grade Filter Tabs -->
+      <div class="grade-tabs">
+        <button class="grade-tab" [class.active]="selectedGrade === 10" (click)="selectGrade(10)">
+          <i class="fas fa-layer-group"></i> Lớp 10
+        </button>
+        <button class="grade-tab" [class.active]="selectedGrade === 11" (click)="selectGrade(11)">
+          <i class="fas fa-layer-group"></i> Lớp 11
+        </button>
+        <button class="grade-tab" [class.active]="selectedGrade === 12" (click)="selectGrade(12)">
+          <i class="fas fa-layer-group"></i> Lớp 12
+        </button>
+      </div>
+    </div>
+
+    <!-- Subject Cards Grid -->
+    <div class="tracks-grid">
+      <div class="track-item animate-in" *ngFor="let subject of filteredSubjects" (click)="onSubjectSelect(subject)">
+        <div class="track-hex-icon" [style.background]="getIconBg(subject.name)">
+          <i [class]="getIcon(subject.name)"></i>
+        </div>
+        <div class="track-info">
+          <h3>{{subject.name}}</h3>
+          <p class="track-meta">Lớp {{subject.grade_level}} · Chương trình THPT</p>
+          
+          
+        </div>
+        <button class="track-btn">Học ngay <i class="fas fa-arrow-right"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MAIN CONTENT GRID (Community + Sidebar) ===== -->
+  <div class="dashboard-main-grid animate-in" style="animation-delay: 0.6s">
+    <!-- Left: Community Posts -->
+    <div class="left-col">
+      
+    </div>
+
+    <!-- Right: Sidebar -->
+    <aside class="right-col">
+      <!-- Progress card -->
+      
+
+      <!-- AI Chat card -->
+      
+    </aside>
+  </div>
+
+</div>

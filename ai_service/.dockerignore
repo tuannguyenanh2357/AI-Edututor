@@ -1,0 +1,15 @@
+venv
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.vscode
+.git
+*.log
+api_response.json
+backend_logs.txt
+frontend_logs.txt
+temp_ssr.html

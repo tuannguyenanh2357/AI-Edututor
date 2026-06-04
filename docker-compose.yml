@@ -1,0 +1,103 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: edututor_db
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-edututor_db}
+      MYSQL_USER: ${DB_USER:-user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-password}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
+    ports:
+      - "${DB_EXTERNAL_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: edututor_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: edututor-backend
+    # Đổi lệnh chạy sang runserver để nó tự load CSS
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      DEBUG: "True"
+      SECRET_KEY: "django-insecure-key-tam-thoi"
+      DB_ENGINE: "django.db.backends.mysql"
+      DB_NAME: ${DB_NAME:-edututor_db}
+      DB_USER: ${DB_USER:-user}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_HOST: db
+      DB_PORT: "3306"
+      AI_SERVICE_URL: "http://ai_service:8001"
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - static_volume:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: edututor-frontend
+    environment:
+      NG_ALLOWED_HOSTS: "*"
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+      - ai_service
+
+  ai_service:
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile
+    container_name: edututor-ai
+    # Chạy python main.py
+    command: python -u main.py
+    environment:
+      - PORT=8001
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GCP_LOCATION=${GCP_LOCATION}
+      - VERTEX_MODEL_ID=${VERTEX_MODEL_ID}
+      - DJANGO_BACKEND_URL=http://backend:8000
+    env_file:
+      - .env
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./ai_service:/app
+      - ./backend/media:/app/media
+    depends_on:
+      - backend
+      - redis
+
+volumes:
+  mysql_data:
+  redis_data:
+  static_volume:
+  media_volume:

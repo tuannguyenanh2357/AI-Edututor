@@ -1,0 +1,140 @@
+<div class="admin-layout">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+        <defs>
+          <linearGradient id="logo-grad-ana" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1565C0" />
+            <stop offset="100%" stop-color="#00BCD4" />
+          </linearGradient>
+        </defs>
+        <rect width="28" height="28" rx="8" fill="url(#logo-grad-ana)"/>
+        <path d="M14 7v14M7 14h14M9 9l10 10M19 9l-10 10" stroke="white" stroke-width="1.2" stroke-opacity="0.4"/>
+        <circle cx="14" cy="14" r="5" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.5"/>
+        <circle cx="14" cy="14" r="2" fill="white"/>
+      </svg>
+      <span class="brand-name">EduTutor <strong>AI</strong></span>
+    </div>
+    <div class="topbar-right">
+      <div class="admin-avatar-chip">
+        <div class="avatar-circle">A</div>
+        <div class="avatar-info">
+          <span class="avatar-name">Admin</span>
+          <span class="avatar-role">Quản trị viên</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <main class="page-content">
+    <div class="page-header">
+      <a routerLink="/admin/dashboard" class="back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Quay lại
+      </a>
+      <h1 class="page-title">Thống kê môn học</h1>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">TỔNG MÔN HỌC</div>
+        <div class="stat-value">{{ subjectStats.length }}</div>
+        <div class="stat-sub">Toán · Lý · Hóa · Sử · Địa · GDCD</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">HỌC SINH ĐANG HỌC</div>
+        <div class="stat-value">{{ totalStudents }}</div>
+        <div class="stat-sub">Dữ liệu theo từng khối lớp 10, 11, 12</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">MÔN PHỔ BIẾN NHẤT</div>
+        <div class="stat-value popular-name">{{ topSubject?.name || '---' }}</div>
+        <div class="stat-sub">{{ topSubject?.students || 0 }} học sinh · {{ topSubject?.sessions || 0 }} sessions</div>
+      </div>
+    </div>
+
+    <!-- Main Table -->
+    <div class="table-card">
+      <div class="table-card-header">
+        <h2 class="table-title">THỐNG KÊ CHI TIẾT THEO MÔN (KHỐI LỚP)</h2>
+      </div>
+
+      <div class="loading-overlay" *ngIf="isLoading">
+        <div class="spinner"></div>
+      </div>
+
+      <table class="data-table" *ngIf="!isLoading">
+        <thead>
+          <tr>
+            <th>HẠNG</th>
+            <th>MÔN HỌC</th>
+            <th>HỌC SINH</th>
+            <th>TỈ LỆ HỌC SINH</th>
+            <th>XU HƯỚNG</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let subject of subjectStats; let i = index">
+            <td class="rank-cell">#{{ i + 1 }}</td>
+            <td class="subject-cell">
+              <span class="dot" [style.background]="subject.color"></span>
+              {{ subject.name }}
+            </td>
+            <td>{{ subject.students || 0 }}</td>
+            <td class="pct-cell">
+              <div class="mini-bar">
+                <div class="mini-fill" [style.width.%]="getPercent(subject.students)" [style.background]="subject.color"></div>
+              </div>
+              <span>{{ getPercent(subject.students) }}%</span>
+            </td>
+            <td>
+              <span class="trend-tag" [class.trend-up]="subject.trend > 0" [class.trend-stable]="subject.trend === 0" [class.trend-down]="subject.trend < 0">
+                <span class="trend-icon">{{ subject.trend > 0 ? '↗' : subject.trend < 0 ? '↘' : '•' }}</span>
+                {{ subject.trend === 0 ? 'Ổn định' : (subject.trend > 0 ? '+' : '') + subject.trend + '%' }}
+              </span>
+            </td>
+            <td><button class="btn-view">Xem</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty-state" *ngIf="!isLoading && subjectStats.length === 0">Chưa có dữ liệu môn học</div>
+    </div>
+
+    <!-- Grade Distribution -->
+    <div class="bottom-grid" *ngIf="!isLoading">
+      <div class="table-card">
+        <div class="table-card-header">
+          <h2 class="table-title">PHÂN BỐ HỌC SINH THEO LỚP</h2>
+        </div>
+        <div class="grade-dist">
+          <div class="grade-item" *ngFor="let g of gradeDistribution">
+            <div class="grade-count">{{ g.count }}</div>
+            <div class="grade-label">{{ g.label }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-card-header">
+          <h2 class="table-title">THỐNG KÊ BIỂU ĐỒ</h2>
+        </div>
+        <div class="bar-chart">
+          <div class="bar-col" *ngFor="let subject of subjectStats">
+            <div class="bar-wrap">
+              <div class="bar-fill-v"
+                   [style.height.%]="getBarHeight(subject.students)"
+                   [style.background]="subject.color">
+              </div>
+            </div>
+            <div class="bar-count">{{ subject.students || 0 }}</div>
+            <div class="bar-label-v" [title]="subject.name">{{ subject.name.split(' ')[0] }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

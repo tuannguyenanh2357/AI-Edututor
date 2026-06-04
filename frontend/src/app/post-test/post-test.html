@@ -1,0 +1,21 @@
+<div class="min-h-screen bg-neutral-900 text-white p-6 md:p-12">
+    <div class="max-w-4xl mx-auto bg-neutral-800 rounded-3xl p-8 border border-neutral-700 shadow-2xl relative overflow-hidden">
+      <!-- Mảng màu trang trí -->
+      <div class="absolute -bottom-32 -right-32 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl"></div>
+  
+      <div class="relative z-10 flex flex-col items-center text-center py-10">
+        <div class="w-20 h-20 bg-orange-500/20 text-orange-400 rounded-full flex justify-center items-center mb-6 border border-orange-500/30">
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+        </div>
+        <h1 class="text-3xl font-bold mb-4">Bài Kiểm Tra Định Kỳ (Post-Test)</h1>
+        <p class="text-neutral-400 mb-8 max-w-2xl">
+          Phần giao diện thực hiện quiz trắc nghiệm chi tiết sẽ được tái sử dụng từ module Quiz. (Click hoàn tất để demo luồng mở khóa).
+        </p>
+        
+        <button (click)="completeQuiz()" [disabled]="isCompleting" class="px-8 py-3 rounded-full font-bold bg-gradient-to-r from-orange-400 to-red-500 hover:scale-105 text-white transition-all duration-300 shadow-[0_0_15px_rgba(249,115,22,0.4)] flex items-center gap-2">
+            <span *ngIf="isCompleting" class="animate-spin h-5 w-5 border-2 border-white/50 border-t-white rounded-full"></span>
+            Giả lập đạt 100% & Hoàn tất
+        </button>
+      </div>
+    </div>
+  </div>

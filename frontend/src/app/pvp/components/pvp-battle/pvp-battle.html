@@ -1,0 +1,60 @@
+<div class="battle-wrapper">
+  <!-- Floating background decorations from Pre-test -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- Top progress bar (Academic Style) -->
+  <div class="top-progress-bar" *ngIf="phase === 'playing'">
+    <div class="top-progress-fill" [style.width]="(currentIndex / questions.length * 100) + '%'"></div>
+  </div>
+
+  <!-- LOADING STATE -->
+  <div *ngIf="phase === 'loading'" class="loading-screen">
+    <div class="spinner"></div>
+    <h2 class="loading-title">Đang kết nối đấu trường...</h2>
+  </div>
+
+  <!-- WAITING STATE -->
+  <div *ngIf="phase === 'waiting'" class="waiting-screen">
+    <div class="pulse-icon">
+      <i class="fas fa-user-friends"></i>
+    </div>
+    <h2 class="loading-title">Đang chờ đối thủ...</h2>
+    <div class="dots-loader">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- BATTLE ARENA -->
+  <div *ngIf="phase === 'playing' && currentQuestion" class="battle-arena">
+    <header class="battle-header">
+      <div class="question-counter">
+        <span>CÂU HỎI {{ currentIndex + 1 }}</span>
+        <span>/ {{ questions.length }}</span>
+      </div>
+      <div class="timer-ring" [class.danger]="timeLeft <= 5">
+        <span class="timer-val">{{ timeLeft }}</span>
+      </div>
+    </header>
+
+    <div class="question-card animate-fade-in">
+      <p class="question-text" [innerHTML]="currentQuestion.question_text | markdownRender"></p>
+    </div>
+
+    <div class="options-grid">
+      <button *ngFor="let key of optionKeys" 
+              class="option-btn"
+              [class.selected]="selectedAnswer === key"
+              [class.correct]="isTransitioning && key === correctKey"
+              [class.wrong]="isTransitioning && selectedAnswer === key && key !== correctKey"
+              [disabled]="isTransitioning"
+              (click)="selectAnswer(key)">
+        <div class="option-key" [class.bg-correct]="isTransitioning && key === correctKey" [class.bg-wrong]="isTransitioning && selectedAnswer === key && key !== correctKey">
+          {{ key }}
+        </div>
+        <span class="option-text" [innerHTML]="currentQuestion.options[key] | markdownRender"></span>
+      </button>
+    </div>
+  </div>
+</div>

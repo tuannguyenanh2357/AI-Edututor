@@ -1,0 +1,34 @@
+<div class="ready-check-overlay animate-fade-in">
+  <div class="ready-modal animate-zoom">
+    <div class="ready-header">
+      <div class="glow-ring"></div>
+      <i class="fas fa-swords main-icon"></i>
+      <h2>TRẬN ĐẤU ĐÃ SẴN SÀNG!</h2>
+      <p class="subtitle">Thách đấu từ <strong>{{ battle.challenger.username }}</strong></p>
+    </div>
+
+    <div class="ready-body">
+      <div class="timer-container">
+        <div class="timer-label">{{ timeLeft }}</div>
+        <div class="progress-track">
+          <div class="progress-fill" [style.width.%]="progressWidth"></div>
+        </div>
+      </div>
+
+      <div class="rank-info">
+        <span class="rank-title">{{ battle.challenger.rank }}</span>
+        <span class="xp-points">{{ battle.challenger.total_xp }} XP</span>
+      </div>
+    </div>
+
+    <div class="ready-footer">
+      <button class="btn-ready accept" (click)="accept()" [disabled]="isProcessing">
+        <span *ngIf="!isProcessing">CHẤP NHẬN</span>
+        <span *ngIf="isProcessing" class="loader"></span>
+      </button>
+      <button class="btn-ready decline" (click)="decline()" [disabled]="isProcessing">
+        TỪ CHỐI
+      </button>
+    </div>
+  </div>
+</div>

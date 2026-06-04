@@ -1,0 +1,191 @@
+<div class="admin-layout">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+        <defs>
+          <linearGradient id="logo-grad-usr" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1565C0" />
+            <stop offset="100%" stop-color="#00BCD4" />
+          </linearGradient>
+        </defs>
+        <rect width="28" height="28" rx="8" fill="url(#logo-grad-usr)"/>
+        <path d="M14 7v14M7 14h14M9 9l10 10M19 9l-10 10" stroke="white" stroke-width="1.2" stroke-opacity="0.4"/>
+        <circle cx="14" cy="14" r="5" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.5"/>
+        <circle cx="14" cy="14" r="2" fill="white"/>
+      </svg>
+      <span class="brand-name">EduTutor <strong>AI</strong></span>
+    </div>
+    <div class="topbar-right">
+      <div class="admin-avatar-chip">
+        <div class="avatar-circle">A</div>
+        <div class="avatar-info">
+          <span class="avatar-name">Admin</span>
+          <span class="avatar-role">Quản trị viên</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <main class="page-content">
+    <div class="page-header">
+      <a routerLink="/admin/dashboard" class="back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Quay lại
+      </a>
+      <h1 class="page-title">Quản lý User</h1>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">TỔNG HỌC SINH ĐÃ ĐĂNG KÝ</div>
+        <div class="stat-value">{{ totalCount }}</div>
+        <div class="stat-trend up" *ngIf="newThisWeek > 0">+{{ newThisWeek }} học sinh tuần này</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ACTIVE HÔM NAY</div>
+        <div class="stat-value">{{ activeToday }}</div>
+        <div class="stat-trend neutral">{{ activePct }}% tổng users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">TÀI KHOẢN BỊ KHÓA</div>
+        <div class="stat-value">{{ lockedCount }}</div>
+        <div class="stat-trend down" *ngIf="lockedCount > 0">Cần xem lại</div>
+        <div class="stat-trend neutral" *ngIf="lockedCount === 0">Bình thường</div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" placeholder="Tìm tên, email..." [(ngModel)]="searchQuery" (input)="applyFilter()" />
+      </div>
+      <div class="filters">
+        <select [(ngModel)]="filterGrade" (change)="applyFilter()">
+          <option value="">Tất cả lớp</option>
+          <option value="10">Lớp 10</option>
+          <option value="11">Lớp 11</option>
+          <option value="12">Lớp 12</option>
+        </select>
+        <select [(ngModel)]="filterSubject" (change)="applyFilter()">
+          <option value="">Tất cả môn</option>
+          <option value="Toán">Toán</option>
+          <option value="Lý">Lý</option>
+          <option value="Hóa">Hóa</option>
+          <option value="Sử">Sử</option>
+          <option value="Địa">Địa</option>
+          <option value="GDCD">GDCD</option>
+        </select>
+        <select [(ngModel)]="filterStatus" (change)="applyFilter()">
+          <option value="">Tất cả trạng thái</option>
+          <option value="active">Active</option>
+          <option value="locked">Bị khóa</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <div class="loading-overlay" *ngIf="isLoading">
+        <div class="spinner"></div>
+      </div>
+      <table class="user-table" *ngIf="!isLoading">
+        <thead>
+          <tr>
+            <th>HỌC SINH</th>
+            <th>LỚP</th>
+            <th>TỔNG BUỔI</th>
+            <th>TRẠNG THÁI</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of pagedUsers" [class.selected]="selectedUser?.id === user.id">
+            <td class="user-cell">
+              <div class="user-avatar" [style.background]="user.avatarColor">
+                {{ user.name.charAt(0).toUpperCase() }}
+              </div>
+              <div class="user-info">
+                <span class="user-name">{{ user.name }}</span>
+                <span class="user-email">{{ user.email }}</span>
+              </div>
+            </td>
+            <td><span class="grade-badge">{{ user.grade || 12 }}</span></td>
+            <td>{{ user.totalSessions || 0 }}</td>
+            <td>
+              <span class="status-badge" [class.active]="!user.isLocked" [class.locked]="user.isLocked">
+                {{ user.isLocked ? 'Bị khóa' : 'Active' }}
+              </span>
+            </td>
+            <td>
+              <button class="btn-view" (click)="openDetail(user)">Xem</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty-state" *ngIf="!isLoading && filteredUsers.length === 0">
+        Không tìm thấy người dùng nào
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="!isLoading && totalPages > 1">
+        <span class="page-info">Hiển thị {{ (currentPage - 1) * pageSize + 1 }}–{{ Math.min(currentPage * pageSize, filteredUsers.length) }} / {{ filteredUsers.length }} học sinh</span>
+        <div class="page-btns">
+          <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">‹</button>
+          <button class="page-btn" *ngFor="let p of pageNumbers"
+                  [class.active]="p === currentPage"
+                  (click)="goPage(p)">{{ p }}</button>
+          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">›</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Detail Panel -->
+  <div class="detail-overlay" *ngIf="showDetail" (click)="closeDetail()">
+    <div class="detail-panel" (click)="$event.stopPropagation()">
+      <div class="detail-header">
+        <h3>Chi tiết học sinh</h3>
+        <button class="btn-close" (click)="closeDetail()">✕</button>
+      </div>
+      <div class="detail-body" *ngIf="selectedUser">
+        <div class="detail-user-hero">
+          <div class="hero-avatar" [style.background]="selectedUser.avatarColor">
+            {{ selectedUser.name.charAt(0).toUpperCase() }}
+          </div>
+          <div class="hero-info">
+            <div class="hero-name">{{ selectedUser.name }}</div>
+            <div class="hero-email">{{ selectedUser.email }}</div>
+          </div>
+        </div>
+
+        <div class="detail-section-label">THÔNG TIN CÁ NHÂN</div>
+        <div class="detail-row"><span>Lớp</span><span>{{ selectedUser.grade || 12 }}</span></div>
+        <div class="detail-row"><span>Ngày đăng ký</span><span>{{ selectedUser.createdAt || '---' }}</span></div>
+        <div class="detail-row">
+          <span>Trạng thái</span>
+          <span class="status-badge" [class.active]="!selectedUser.isLocked" [class.locked]="selectedUser.isLocked">
+            {{ selectedUser.isLocked ? 'Bị khóa' : 'Active' }}
+          </span>
+        </div>
+
+        <div class="detail-section-label" style="margin-top:20px">TIẾN ĐỘ HỌC TẬP</div>
+        <div class="detail-row"><span>Môn đang học</span><span>{{ selectedUser.currentSubject || 'Chưa chọn' }}</span></div>
+        <div class="detail-row"><span>Chương hiện tại</span><span>{{ selectedUser.currentChapter || '---' }}</span></div>
+        <div class="detail-row"><span>Tổng buổi học</span><span>{{ selectedUser.totalSessions || 0 }} buổi</span></div>
+      </div>
+      <div class="detail-footer">
+        <button class="btn-lock" (click)="toggleLock()">
+          {{ selectedUser?.isLocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản' }}
+        </button>
+        <button class="btn-close-plain" (click)="closeDetail()">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>

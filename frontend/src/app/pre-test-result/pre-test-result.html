@@ -1,0 +1,101 @@
+<div class="result-page">
+    <div class="result-card">
+        <!-- Evaluating State -->
+        <ng-container *ngIf="resultStatus === 'evaluating'">
+            <div class="spinner-container">
+                <div class="spinner-ring"></div>
+                <div class="spinner-icon">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+            </div>
+            <h2 class="title text-gradient">AI đang phân tích bài làm</h2>
+            <p class="subtitle">Hệ thống đang phát hiện lỗ hổng kiến thức và xây dựng lộ trình học thích hợp nhất...</p>
+            
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </ng-container>
+
+        <!-- Completed State -->
+        <ng-container *ngIf="resultStatus === 'completed'">
+            <div class="success-icon" [class.mastered]="isMastered">
+                <i class="fa-solid" [class.fa-trophy]="isMastered" [class.fa-check]="!isMastered"></i>
+            </div>
+            <h2 class="title text-white" *ngIf="!isMastered">Hoàn tất phân tích!</h2>
+            <h2 class="title text-gradient" *ngIf="isMastered">TUYỆT VỜI! BẠN ĐÃ THÔNG THẠO</h2>
+            <div class="score-display">
+                {{score}}<span class="score-percent">%</span>
+            </div>
+
+            <div class="stats-summary" *ngIf="questions.length > 0">
+                <div class="stat-item correct">
+                    <span class="stat-value">{{correctCount}}</span>
+                    <span class="stat-label">Đúng</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item wrong">
+                    <span class="stat-value">{{wrongCount}}</span>
+                    <span class="stat-label">Sai</span>
+                </div>
+            </div>
+
+
+            <p class="feedback-text" *ngIf="aiFeedback">"{{ aiFeedback }}"</p>
+            
+            <div class="mastery-badge-container" *ngIf="isMastered">
+                <div class="mastery-badge">
+                    <i class="fas fa-award"></i>
+                    <span>BẠN ĐÃ LÀ BẬC THẦY CHƯƠNG NÀY</span>
+                </div>
+                <p class="subtitle mt-4">Điểm số ấn tượng! Bạn đã nắm vững các kiến thức trọng tâm và có thể bỏ qua lộ trình học bù để tiến thẳng tới chương tiếp theo.</p>
+            </div>
+
+            <p class="subtitle mb-8" *ngIf="!isMastered">AI đã soạn xong lộ trình học cá nhân hóa dành riêng cho bạn!</p>
+
+            <div class="actions">
+                <button class="btn-primary" (click)="startLearning()" [class.btn-mastered]="isMastered">
+                    <i class="fa-solid" [class.fa-rocket]="!isMastered" [class.fa-arrow-right]="isMastered"></i> 
+                    {{ isMastered ? 'Khám phá chương tiếp theo' : 'Bắt đầu học theo lộ trình AI' }}
+                </button>
+                <button class="btn-secondary" (click)="goToDashboard()">
+                    Về Dashboard
+                </button>
+            </div>
+            
+            <!-- Review Answers Section -->
+            <div class="review-section mt-8" *ngIf="questions && questions.length > 0">
+                <h3 class="review-title">Xem lại bài làm</h3>
+                <div class="questions-list">
+                    <div *ngFor="let q of questions; let i = index" class="question-item" [ngClass]="{'is-correct': userAnswers[q.id] === getCorrectAnswerId(q), 'is-wrong': userAnswers[q.id] !== getCorrectAnswerId(q)}">
+                        <div class="q-header">
+                            <span class="q-num">Câu {{i + 1}}:</span>
+                            <span class="q-status">
+                                <i class="fas fa-check-circle text-green-500" *ngIf="userAnswers[q.id] === getCorrectAnswerId(q)"></i>
+                                <i class="fas fa-times-circle text-red-500" *ngIf="userAnswers[q.id] !== getCorrectAnswerId(q)"></i>
+                            </span>
+                        </div>
+                        <p class="q-text" [innerHTML]="renderMath(q.question_text)"></p>
+                        <div class="answers-grid">
+                            <div *ngFor="let ans of q.answers" class="ans-opt" 
+                                 [ngClass]="{'selected': userAnswers[q.id] === ans.id, 'correct': ans.is_correct}">
+                                <span [innerHTML]="renderMath(ans.answer_text)"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- Error State -->
+        <ng-container *ngIf="resultStatus === 'error'">
+            <div class="error-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h2 class="title text-white">Phân tích thất bại</h2>
+            <p class="subtitle mb-8">Rất tiếc vì sự cố hệ thống. AI Evaluator hiện không thể xử lý.</p>
+            <button class="btn-secondary" (click)="goToDashboard()">
+                Trở về Dashboard
+            </button>
+        </ng-container>
+    </div>
+</div>

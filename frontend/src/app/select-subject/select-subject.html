@@ -1,0 +1,102 @@
+<div class="subject-page">
+  <!-- Back Button -->
+  <button class="btn-back-dashboard" routerLink="/dashboard" title="Quay lại Dashboard">
+    <i class="fas fa-arrow-left"></i> <span>Dashboard</span>
+  </button>
+
+
+
+  <!-- Ambient blobs -->
+  <div class="blob blob-top"></div>
+  <div class="blob blob-bottom"></div>
+
+  <!-- ══════ HERO HEADER ══════ -->
+  <header class="hero-section">
+    <div class="hero-eyebrow">
+      <span class="eyebrow-dot"></span>
+      <span>EduTutor AI · Hệ thống Đánh giá Thích nghi</span>
+    </div>
+    <h1 class="hero-title">
+      Khởi đầu <span class="hero-highlight">Hành trình</span><br>Học tập của bạn
+    </h1>
+    <p class="hero-desc">
+      Chọn môn học để AI phân tích lỗ hổng kiến thức và xây dựng lộ trình học cá nhân hóa.
+    </p>
+    <div class="hero-stats">
+      <div class="stat-chip"><i class="fas fa-brain"></i> AI-Powered</div>
+      <div class="stat-chip"><i class="fas fa-route"></i> Lộ trình cá nhân</div>
+      <div class="stat-chip"><i class="fas fa-chart-line"></i> Theo dõi tiến độ</div>
+    </div>
+  </header>
+
+  <!-- ══════ LOADING ══════ -->
+  <div *ngIf="isLoading" class="loading-area">
+    <div class="spinner"></div>
+    <p>Đang tải danh sách môn học...</p>
+  </div>
+
+  <!-- ══════ SUBJECTS GRID ══════ -->
+  <main *ngIf="!isLoading" class="subjects-container">
+    <div class="section-label">
+      <span class="label-line"></span>
+      <span>Chọn môn học</span>
+      <span class="label-line"></span>
+    </div>
+
+    <div class="subjects-grid">
+      <div *ngFor="let subject of subjects; let i = index"
+           class="subject-card"
+           [class.has-path]="hasLearningPath(subject.id)"
+           [style.--delay]="(i * 80) + 'ms'"
+           (click)="onSelectSubject(subject.id)">
+
+        <!-- Glow overlay on hover -->
+        <div class="card-glow"></div>
+
+        <!-- Card top row -->
+        <div class="card-header">
+          <div class="subject-icon">
+            <span class="icon-letter">{{ subject.name.charAt(0) }}</span>
+            <div class="icon-ring"></div>
+          </div>
+          <div class="card-status" [class.status-active]="hasLearningPath(subject.id)">
+            <span class="status-dot"></span>
+            {{ hasLearningPath(subject.id) ? 'Đang học' : 'Mới' }}
+          </div>
+        </div>
+
+        <!-- Card content -->
+        <div class="card-body">
+          <h2 class="subject-name">{{ subject.name }}</h2>
+          <p class="subject-desc">
+            {{ subject.name }} · THPT Lớp {{ subject.grade_level }} · AI-powered assessment
+          </p>
+
+          <!-- Meta info -->
+          <div class="subject-meta">
+            <span class="meta-badge">
+              <i class="fas fa-layer-group"></i> Đa chương
+            </span>
+            <span class="meta-badge">
+              <i class="fas fa-clock"></i> ~20 phút
+            </span>
+          </div>
+        </div>
+
+        <!-- Card footer -->
+        <div class="card-footer">
+          <span class="action-text">
+            {{ hasLearningPath(subject.id) ? 'Tiếp tục lộ trình' : 'Bắt đầu đánh giá AI' }}
+          </span>
+          <div class="action-arrow">
+            <i class="fas fa-arrow-right"></i>
+          </div>
+        </div>
+
+        <!-- Bottom accent bar -->
+        <div class="card-accent-bar"></div>
+      </div>
+    </div>
+  </main>
+
+</div>

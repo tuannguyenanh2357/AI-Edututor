@@ -1,0 +1,62 @@
+<div class="lobby-wrapper">
+  <header class="lobby-nav">
+    <button class="btn-back" (click)="goBack()"><i class="fas fa-arrow-left"></i></button>
+    <h1>⚔️ Đấu Trường PvP</h1>
+    <div class="nav-actions" style="display: flex; gap: 12px; align-items: center; margin-left: auto;">
+      <app-pvp-notification-bell></app-pvp-notification-bell>
+      <button class="btn-history" (click)="viewHistory()"><i class="fas fa-scroll"></i> Lịch sử</button>
+    </div>
+  </header>
+
+
+  <!-- Challenge Message -->
+  <div class="challenge-msg" *ngIf="challengeMsg">
+    <i class="fas fa-info-circle"></i> {{ challengeMsg }}
+  </div>
+
+  <!-- Leaderboard for Challenging -->
+  <section class="players-section">
+    <h3 class="section-title"><i class="fas fa-trophy"></i> Thách Đấu Dũng Sĩ Khối {{ myGrade }}</h3>
+    <div class="player-list">
+      <div class="player-row" *ngFor="let p of players; let i = index">
+        <span class="rank-pos">
+          <i class="fas fa-crown" *ngIf="i === 0" style="color:#fbbf24"></i>
+          <span *ngIf="i > 0">#{{ i + 1 }}</span>
+        </span>
+        <img class="player-avatar" [src]="'https://ui-avatars.com/api/?name=' + p.username + '&background=random&color=fff'" alt="">
+        <div class="player-info">
+          <span class="player-name">{{ p.username }}</span>
+          <span class="player-rank">{{ p.rank || 'Tập Sự' }}</span>
+        </div>
+        <span class="player-xp">{{ p.total_xp }} XP</span>
+        <!-- Show "BẠN" badge for self, challenge button for others -->
+        <span class="badge-self" *ngIf="isSelf(p)">BẠN</span>
+        <button
+          class="btn-challenge"
+          *ngIf="!isSelf(p)"
+          (click)="challenge(p)"
+          [disabled]="isLoading">
+          <i class="fas fa-swords"></i> Thách Đấu
+        </button>
+      </div>
+      <div class="empty-state" *ngIf="players.length === 0">
+        <p>Chưa có dũng sĩ nào trong khối này để thách đấu.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- COMPACT WAITING TOAST (Challenger) — bottom of screen, non-blocking -->
+<div class="waiting-toast animate-slide-up" *ngIf="waitingForBattleId">
+  <div class="toast-left">
+    <div class="toast-spinner"></div>
+    <div class="toast-text">
+      <span class="toast-title">Đang chờ đối thủ...</span>
+      <span class="toast-sub">{{ challengeMsg }}</span>
+    </div>
+  </div>
+  <div class="toast-right" style="display: flex; align-items: center; gap: 12px;">
+    <div class="toast-timer" [class.urgent]="countdownSec <= 5">{{ countdownSec }}s</div>
+    <button class="btn-cancel-toast" (click)="cancelChallenge()">Hủy</button>
+  </div>
+</div>

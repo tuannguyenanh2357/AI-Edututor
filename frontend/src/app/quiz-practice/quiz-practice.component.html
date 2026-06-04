@@ -1,0 +1,337 @@
+<!-- Shell: hiển thị cả khi đang chọn môn (chưa có subject) -->
+<div class="practice-shell" *ngIf="!isDataLoading; else loadingOrError">
+
+  <!-- NAVBAR -->
+  <nav class="practice-nav">
+    <a class="nav-back" [routerLink]="quizState === 'subject_select' ? ['/dashboard'] : ['/chat', subjectId]">
+      <i class="fas fa-arrow-left"></i> {{ quizState === 'subject_select' ? 'Dashboard' : 'Quay lại học' }}
+    </a>
+    <div class="nav-title">
+      <i class="fas fa-bolt-lightning nav-icon"></i>
+      <span>Luyện tập AI</span>
+      <span class="nav-chip" *ngIf="subject">{{ subject.name }}<ng-container *ngIf="subject.grade_level"> · Lớp {{ subject.grade_level }}</ng-container></span>
+      <span class="nav-chip" *ngIf="!subject">Chọn môn học</span>
+    </div>
+    <div class="nav-status">
+      <ng-container *ngIf="quizState === 'quiz_active'">
+        <span class="progress-label">Câu {{ currentIndex + 1 }} / {{ questions.length }}</span>
+      </ng-container>
+    </div>
+  </nav>
+
+  <!-- CENTERED LAYOUT -->
+  <div class="centered-layout">
+    <main class="quiz-container">
+
+      <!-- ── BƯỚC 0: CHỌN MÔN HỌC (khi vào từ menu mà không có subjectId) ── -->
+      <div class="state-card topic-card" *ngIf="quizState === 'subject_select'">
+        <div class="state-icon-wrapper purple-gradient">
+          <i class="fas fa-graduation-cap"></i>
+        </div>
+        <h2>Chọn môn học để luyện tập</h2>
+        <p class="state-subtitle">Chuyển sang môn càng nhiều càng tốt &mdash; AI sẽ sinh đề phù hợp từng chương sách giáo khoa.</p>
+        
+        <div class="topic-form">
+          <ng-container *ngIf="isSubjectListLoading">
+            <div class="curriculum-loading">
+              <div class="mini-spinner"></div>
+              <span>Ðang tải danh sách môn học...</span>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="!isSubjectListLoading">
+            <div class="chapter-list">
+              <button
+                *ngFor="let sub of subjects"
+                class="chapter-btn subject-btn"
+                (click)="onSelectSubject(sub)">
+                <div class="chapter-info">
+                  <!-- icon_url chứa Font Awesome class (e.g. 'fas fa-atom') -->
+                  <i [class]="getSubjectIconClass(sub)" class="chapter-icon subject-icon" [style.color]="getSubjectColor(sub.name)"></i>
+                  <span>{{ sub.name }}<ng-container *ngIf="sub.grade_level"> — Lớp {{ sub.grade_level }}</ng-container></span>
+                </div>
+                <i class="fas fa-chevron-right arrow-icon"></i>
+              </button>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- ── BƯỚC 1: CHỌN CHƯƠNG SÁCH ── -->
+      <div class="state-card topic-card" *ngIf="quizState === 'topic_select'">
+        <div class="state-icon-wrapper purple-gradient">
+          <i class="fas fa-magic-wand-sparkles"></i>
+        </div>
+        <h2>Chọn chương để luyện tập</h2>
+        <p class="state-subtitle">
+          AI sẽ soạn <strong>{{ numQuestions }} câu hỏi</strong> từ chương sách giáo khoa bạn chọn.
+          Vượt qua <strong>{{ PASSING_SCORE }}%</strong> để nắm chắc kiến thức.
+        </p>
+
+        <div class="topic-form">
+          <!-- BƯỚC 1: CHỌN CHƯƠNG -->
+          <div class="form-group" *ngIf="!selectedChapter">
+            <label>1. Chọn Chương luyện tập</label>
+            <div class="chapter-list" *ngIf="hasChapters; else noChapters">
+              <button
+                *ngFor="let chap of chapters"
+                class="chapter-btn"
+                (click)="onSelectChapter(chap)">
+                <div class="chapter-info">
+                  <i class="fas fa-book-open chapter-icon"></i>
+                  <span>{{ chap.title }}</span>
+                </div>
+                <i class="fas fa-chevron-right arrow-icon"></i>
+              </button>
+            </div>
+            <ng-template #noChapters>
+              <div class="no-docs-notice">
+                <i class="fas fa-info-circle"></i>
+                Chưa có dữ liệu chương mục cho môn này. AI sẽ sinh câu hỏi theo chương trình chuẩn.
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- BƯỚC 2: CHỌN BÀI HỌC -->
+          <div class="form-group animate-in" *ngIf="selectedChapter && !selectedLesson && !isCurriculumLoading">
+            <div class="group-header">
+              <label>2. Chọn Bài học trong "{{ selectedChapter.title }}"</label>
+              <button class="btn-text-only" (click)="backToChapters()">
+                <i class="fas fa-arrow-left"></i> Đổi chương
+              </button>
+            </div>
+            <div class="chapter-list">
+              <button
+                *ngFor="let lesson of lessons"
+                class="chapter-btn lesson-btn"
+                (click)="onSelectLesson(lesson)">
+                <div class="chapter-info">
+                  <i class="fas fa-file-lines chapter-icon"></i>
+                  <span>{{ lesson.title }}</span>
+                </div>
+                <i class="fas fa-plus-circle add-icon"></i>
+              </button>
+              <!-- Shortcut: Học cả chương -->
+              <button class="chapter-btn study-all-btn" (click)="generateQuiz()">
+                <div class="chapter-info">
+                  <i class="fas fa-layer-group chapter-icon"></i>
+                  <span>Luyện tập tất cả các bài trong chương này</span>
+                </div>
+                <i class="fas fa-bolt-lightning"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- BƯỚC 3: XÁC NHẬN CHỌN BÀI CỤ THỂ -->
+          <div class="lesson-confirmation animate-in" *ngIf="selectedLesson && !quizState.includes('generating')">
+            <div class="selected-pill">
+              <i class="fas fa-check-circle"></i>
+              <span>Đang chọn: <strong>{{ selectedLesson.title }}</strong></span>
+              <button class="btn-close-pill" (click)="selectedLesson = null">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Loading bài học -->
+          <div class="curriculum-loading" *ngIf="isCurriculumLoading">
+            <div class="mini-spinner"></div>
+            <span>Đang tải danh sách bài học...</span>
+          </div>
+
+          <div class="form-group" *ngIf="!isCurriculumLoading && (selectedChapter || !hasChapters)">
+            <label>Số câu hỏi</label>
+            <div class="num-selector">
+              <button class="num-btn" [class.active]="numQuestions === 3" (click)="numQuestions = 3">3 câu</button>
+              <button class="num-btn" [class.active]="numQuestions === 5" (click)="numQuestions = 5">5 câu</button>
+              <button class="num-btn" [class.active]="numQuestions === 10" (click)="numQuestions = 10">10 câu</button>
+            </div>
+          </div>
+
+          <div class="error-msg" *ngIf="errorMessage">
+            <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+          </div>
+
+          <button class="btn-generate" 
+            *ngIf="!isCurriculumLoading && (selectedChapter || !hasChapters)"
+            (click)="generateQuiz()">
+            <i class="fas fa-bolt"></i> 
+            {{ selectedLesson ? 'Bắt đầu luyện tập Bài này' : 'Bắt đầu ngay' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ── BƯỚC 2: AI ĐANG SINH ĐỀ ── -->
+      <div class="state-card generating-card" *ngIf="quizState === 'generating'">
+        <div class="ai-spinner">
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring delay-1"></div>
+          <div class="spinner-ring delay-2"></div>
+        </div>
+        <h2>AI đang soạn bài...</h2>
+        <p>Đang phân tích "<strong>{{ chapterTitle }}</strong>" và tạo bài tập đặc chế cho bạn.</p>
+        <div class="skeleton-bars">
+          <div class="skel-bar"></div>
+          <div class="skel-bar short"></div>
+          <div class="skel-bar"></div>
+          <div class="skel-bar medium"></div>
+        </div>
+      </div>
+
+      <!-- ── BƯỚC 3: LÀM BÀI QUIZ ── -->
+      <div class="quiz-active-area" *ngIf="quizState === 'quiz_active' && currentQuestion as q">
+
+        <!-- Thanh tiến độ -->
+        <div class="progress-track">
+          <div class="progress-fill" [style.width.%]="((currentIndex) / questions.length) * 100"></div>
+        </div>
+
+        <!-- Thẻ câu hỏi -->
+        <div class="question-card" [class.answered]="q.selected_index !== null">
+          <div class="question-header">
+            <span class="q-badge">Câu {{ currentIndex + 1 }}</span>
+            <span class="q-topic">{{ chapterTitle }}</span>
+          </div>
+          <div class="question-text" [innerHTML]="q.question | markdownRender"></div>
+
+          <div class="options-grid">
+            <button
+              *ngFor="let opt of q.options; let i = index"
+              class="option-btn"
+              [ngClass]="getOptionNgClass(q, i)"
+              [disabled]="q.selected_index !== null"
+              (click)="selectAnswer(i)">
+              <span class="opt-label">{{ optionLabels[i] }}</span>
+              <span class="opt-text" [innerHTML]="opt | markdownRender"></span>
+            </button>
+          </div>
+
+          <!-- Giải thích đáp án -->
+          <div class="explanation-box" *ngIf="q.show_explanation">
+            <div class="exp-header"
+              [class.correct]="q.is_correct"
+              [class.wrong]="!q.is_correct">
+              <i class="fas"
+                [class.fa-check-circle]="q.is_correct"
+                [class.fa-times-circle]="!q.is_correct"></i>
+              <strong>{{ q.is_correct ? 'Chính xác! Giỏi quá!' : 'Chưa đúng rồi, cố lên!' }}</strong>
+            </div>
+            <div class="exp-body">
+              <div class="correct-answer-line" *ngIf="!q.is_correct">
+                <span class="label">Đáp án đúng là:</span>
+                <span class="value" [innerHTML]="optionLabels[q.correct_index] + '. ' + q.options[q.correct_index] | markdownRender"></span>
+              </div>
+              <div class="exp-text" [innerHTML]="q.explanation | markdownRender"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nút điều hướng -->
+        <div class="quiz-navigation" *ngIf="q.selected_index !== null">
+          <button class="btn-next" (click)="nextQuestion()">
+            {{ currentIndex < questions.length - 1 ? 'Câu tiếp theo' : 'Xem kết quả' }}
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── BƯỚC 4: KẾT QUẢ ── -->
+      <div class="state-card result-card" *ngIf="quizState === 'result'">
+        <div class="score-ring" [class.passed]="isPassed" [class.failed]="!isPassed">
+          <span class="score-number">{{ scorePercent }}%</span>
+          <span class="score-sub">{{ correctCount }}/{{ questions.length }} câu đúng</span>
+        </div>
+
+        <div class="result-verdict" [class.passed]="isPassed">
+          <i class="fas" [class.fa-trophy]="isPassed" [class.fa-book-open]="!isPassed"></i>
+          <h2>{{ isPassed ? 'Tuyệt vời! Bạn giỏi quá!' : 'Cần ôn luyện thêm nhé!' }}</h2>
+          <p>
+            <ng-container *ngIf="isPassed">Bạn đã hiểu rõ phần này. Hãy tự tin học tiếp bài mới!</ng-container>
+            <ng-container *ngIf="!isPassed">Chưa sao đâu! Hãy làm lại bài này hoặc quay lại để học cùng AI.</ng-container>
+          </p>
+        </div>
+
+        <!-- Tóm tắt từng câu -->
+        <div class="result-summary">
+          <div
+            *ngFor="let q of questions; let i = index"
+            class="summary-item"
+            [class.correct]="q.is_correct === true"
+            [class.wrong]="q.is_correct === false">
+            <span class="sum-num">{{ i + 1 }}</span>
+            <span class="sum-q" [innerHTML]="q.question | markdownRender"></span>
+            <i class="fas"
+              [class.fa-check]="q.is_correct === true"
+              [class.fa-times]="q.is_correct === false"></i>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <button class="btn-ai-review" (click)="goToAIReview()" *ngIf="correctCount < questions.length">
+            <i class="fas fa-robot"></i> AI dạy lại kiến thức hổng
+          </button>
+          <div class="result-actions-row">
+            <button class="btn-retry" (click)="retryNewTopic()">
+              <i class="fas fa-rotate-right"></i> Làm bài khác
+            </button>
+            <a class="btn-study" [routerLink]="['/chat', subjectId]">
+              <i class="fas fa-comments"></i> Quay lại học
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Loading / Error state -->
+<ng-template #loadingOrError>
+  <ng-container *ngIf="isDataLoading; else errorScreen">
+    <!-- SKELETON: Mimics the real layout while data loads -->
+    <div class="skeleton-shell">
+      <!-- Skeleton Navbar -->
+      <nav class="skeleton-nav-bar">
+        <div class="skel skel-back"></div>
+        <div class="skel skel-title"></div>
+        <div class="skel skel-chip"></div>
+      </nav>
+
+      <!-- Skeleton Body -->
+      <div class="skeleton-body-wrap">
+        <div class="skeleton-card">
+          <!-- Icon skeleton -->
+          <div class="skel skel-icon-circle"></div>
+          <!-- Title -->
+          <div class="skel skel-heading"></div>
+          <!-- Subtitle -->
+          <div class="skel skel-text w80"></div>
+          <div class="skel skel-text w60"></div>
+
+          <div class="skel-divider"></div>
+
+          <!-- Form field skeletons -->
+          <div class="skel skel-label"></div>
+          <div class="skel skel-input"></div>
+          <div class="skel skel-label mt16"></div>
+          <div class="skel-num-row">
+            <div class="skel skel-num-btn"></div>
+            <div class="skel skel-num-btn"></div>
+            <div class="skel skel-num-btn"></div>
+          </div>
+
+          <!-- Button skeleton -->
+          <div class="skel skel-btn-generate mt16"></div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  <ng-template #errorScreen>
+    <div class="error-state">
+      <i class="fas fa-exclamation-triangle"></i>
+      <h3>{{ errorMessage || 'Không tìm thấy môn học này' }}</h3>
+      <a [routerLink]="['/dashboard']" class="btn-generate" style="text-decoration:none; display:inline-flex; margin-top:16px;">
+        <i class="fas fa-arrow-left"></i> Về Dashboard
+      </a>
+    </div>
+  </ng-template>
+</ng-template>

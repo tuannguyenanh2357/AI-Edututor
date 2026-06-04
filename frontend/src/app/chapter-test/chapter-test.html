@@ -1,0 +1,149 @@
+<div class="test-page">
+
+  <!-- ══════ LOADING ══════ -->
+  <div *ngIf="isLoading" class="loading-screen">
+    <div class="loading-icon">📋</div>
+    <div class="loading-bar"><div class="loading-fill"></div></div>
+    <p>Đang tạo bộ đề thông minh...</p>
+    <small>Hệ thống đang chọn câu hỏi phù hợp từ kho kiến thức</small>
+  </div>
+
+  <!-- ══════ QUIZ AREA ══════ -->
+  <ng-container *ngIf="!isLoading && !showResultModal">
+
+    <!-- Sticky Header Bar -->
+    <div class="quiz-topbar">
+      <button class="exit-btn" (click)="goBack()">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="topbar-info">
+        <span class="chapter-tag">{{ chapterTitle }}</span>
+      </div>
+
+      <div class="topbar-counter">
+        <span class="counter-answered">{{ answeredCount }}</span>
+        <span class="counter-sep">/</span>
+        <span class="counter-total">{{ questions.length }}</span>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-track">
+      <div class="progress-fill" [style.width.%]="progressPercent"></div>
+    </div>
+
+    <!-- Questions -->
+    <main class="questions-area">
+      <div *ngFor="let q of questions; let i = index" class="question-block" [id]="'q-' + q.id">
+        
+        <!-- Question number + difficulty -->
+        <div class="q-meta">
+          <span class="q-num">{{ i + 1 }}</span>
+          <span class="q-difficulty" [class]="'diff-' + (q.difficulty_level || 1)">
+            {{ q.difficulty_display || 'Nhận biết' }}
+          </span>
+        </div>
+
+        <!-- Question text -->
+        <div class="q-text" [innerHTML]="renderMath(q.question_text)"></div>
+
+        <!-- Options -->
+        <div class="options-grid">
+          <button *ngFor="let ans of q.answers; let j = index"
+                  class="option-btn"
+                  [class.is-selected]="isSelected(q.id, ans.id)"
+                  (click)="selectOption(q.id, ans.id)">
+            <span class="option-letter">{{ ['A','B','C','D'][j] }}</span>
+            <span class="option-text" [innerHTML]="renderMath(ans.answer_text)"></span>
+            <span class="option-check">✓</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Submit button -->
+      <div class="submit-area">
+        <div class="submit-status" *ngIf="!canSubmit()">
+          Còn {{ questions.length - answeredCount }} câu chưa trả lời
+        </div>
+        <button class="submit-btn"
+                [disabled]="!canSubmit() || isSubmitting"
+                [class.ready]="canSubmit()"
+                (click)="submitTest()">
+          <span *ngIf="!isSubmitting">
+            <i class="fas fa-paper-plane"></i>
+            Nộp bài & Xem kết quả
+          </span>
+          <span *ngIf="isSubmitting">
+            <i class="fas fa-spinner fa-spin"></i>
+            Đang chấm bài...
+          </span>
+        </button>
+      </div>
+    </main>
+  </ng-container>
+
+  <!-- ══════ RESULT MODAL ══════ -->
+  <div *ngIf="showResultModal" class="result-overlay">
+    <div class="result-modal">
+
+      <!-- Score ring -->
+      <div class="score-section">
+        <div class="score-ring" [style.--score-color]="getScoreColor()">
+          <div class="score-value">{{ score }}<span class="score-unit">%</span></div>
+          <svg class="ring-svg" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
+            <circle cx="60" cy="60" r="50" fill="none" [attr.stroke]="getScoreColor()" stroke-width="8"
+                    stroke-linecap="round" stroke-dasharray="314"
+                    [style.stroke-dashoffset]="314 - (314 * score / 100)"/>
+          </svg>
+        </div>
+        <h2 class="score-label">{{ getScoreLabel() }}</h2>
+        <p class="score-summary">
+          Đúng <strong [style.color]="getScoreColor()">{{ correctCount }}</strong> / {{ totalCount }} câu
+        </p>
+      </div>
+
+      <!-- Answer review -->
+      <div class="review-section">
+        <h3 class="review-title">Xem lại đáp án</h3>
+        <div *ngFor="let q of questions; let i = index" class="review-item" [class.review-correct]="isCorrect(q)" [class.review-wrong]="!isCorrect(q)">
+          <div class="review-header">
+            <span class="review-num">{{ i + 1 }}</span>
+            <span class="review-status">
+              <i [class]="isCorrect(q) ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+            </span>
+          </div>
+          <p class="review-q" [innerHTML]="renderMath(q.question_text)"></p>
+          <div class="review-answers">
+            <p class="review-user" [class.correct]="isCorrect(q)" [class.wrong]="!isCorrect(q)">
+              <strong>Bạn chọn:</strong> <span [innerHTML]="renderMath(getUserChoiceText(q))"></span>
+            </p>
+            <p class="review-correct-ans" *ngIf="!isCorrect(q)">
+              <strong>Đáp án đúng:</strong> <span [innerHTML]="renderMath(getCorrectChoiceText(q))"></span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA Buttons -->
+      <div class="result-actions" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px;">
+        <button class="action-btn action-roadmap" (click)="goToChatWithAI()" style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; border: none; box-shadow: 0 0 15px rgba(99,102,241,0.5); width: 100%; padding: 12px; font-weight: bold; border-radius: 8px;">
+          <i class="fas fa-route"></i> Về Lộ trình học (Dựa trên Kiểm tra Chương)
+        </button>
+        <button class="action-btn action-retry" (click)="tryAgain()">
+          <i class="fas fa-redo"></i> Làm lại
+        </button>
+        <button class="action-btn action-chapter" (click)="goBack()">
+          <i class="fas fa-list"></i> Chọn chương khác
+        </button>
+        <button class="action-btn action-dashboard" (click)="goToDashboard()">
+          <i class="fas fa-home"></i> Trang chủ
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

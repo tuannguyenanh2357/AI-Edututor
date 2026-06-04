@@ -1,0 +1,236 @@
+<div class="pretest-page">
+  <!-- Floating orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- ══════════ LOADING STATE ══════════ -->
+  <div *ngIf="isLoading" class="loading-screen">
+    <div class="brain-loader">
+      <div class="core"></div>
+      <div class="ring ring-1"></div>
+      <div class="ring ring-2"></div>
+      <div class="ring ring-3"></div>
+    </div>
+    <h2 class="loading-title">AI đang thiết kế bài đánh giá...</h2>
+    <p class="loading-sub">Phân tích ngân hàng câu hỏi phù hợp với trình độ của bạn</p>
+  </div>
+
+  <!-- ══════════ QUIZ CONTENT ══════════ -->
+  <div *ngIf="!isLoading && questions.length > 0" class="quiz-wrapper">
+
+    <!-- Top progress bar -->
+    <div class="top-progress-bar">
+      <div class="top-progress-fill"
+           [style.width]="(answeredCount / questions.length * 100) + '%'"></div>
+    </div>
+
+    <!-- Header card -->
+    <header class="quiz-header">
+      <div class="quiz-header-left">
+        <div class="header-badge">
+          <span class="badge-dot"></span>
+          <span>AI Evaluator • Đang hoạt động</span>
+        </div>
+        <h1 class="quiz-title">Đánh giá Năng lực Đầu vào</h1>
+        <p class="quiz-subtitle">Hoàn thành để AI kích hoạt lộ trình học tập tối ưu cho bạn</p>
+      </div>
+      <div class="quiz-progress-card">
+        <div class="progress-ring-wrapper">
+          <svg class="progress-ring" viewBox="0 0 60 60">
+            <circle class="ring-bg" cx="30" cy="30" r="24" fill="none" stroke-width="4"/>
+            <circle class="ring-fill" cx="30" cy="30" r="24" fill="none" stroke-width="4"
+                    [style.stroke-dashoffset]="150.8 - (answeredCount / questions.length * 150.8)"/>
+          </svg>
+          <div class="ring-text">
+            <span class="ring-current">{{answeredCount}}</span>
+            <span class="ring-total">/{{questions.length}}</span>
+          </div>
+        </div>
+        <div class="progress-label">Câu đã trả lời</div>
+      </div>
+    </header>
+
+    <!-- Question list -->
+    <div class="questions-stream">
+      <div *ngFor="let q of questions; let qIndex = index"
+           class="question-card"
+           [id]="'q-' + qIndex"
+           [class.answered]="answers[q.id] !== undefined">
+
+        <!-- Chapter tag -->
+        <div class="chapter-tag">
+          <i class="fas fa-book-open"></i>
+          {{ q.chapter_title || 'Kiến thức chung' }}
+        </div>
+
+        <div class="question-body">
+          <!-- Index badge -->
+          <div class="question-index">{{ qIndex + 1 }}</div>
+
+          <div class="question-content">
+            <!-- Question text -->
+            <div class="question-text" [innerHTML]="renderMath(q.question_text)"></div>
+
+            <!-- Answer Options Grid -->
+            <div class="options-grid">
+              <button *ngFor="let ans of q.answers; let aIdx = index"
+                      type="button"
+                      class="option-btn"
+                      [class.option-selected]="isSelected(q.id, ans.id)"
+                      (click)="selectOption(q.id, ans.id)">
+                <div class="option-label" [class.label-selected]="isSelected(q.id, ans.id)">
+                  {{ ['A','B','C','D'][aIdx] }}
+                </div>
+                <span class="option-text" [innerHTML]="renderMath(ans.answer_text)"></span>
+                <div *ngIf="isSelected(q.id, ans.id)" class="option-check">
+                  <i class="fas fa-check"></i>
+                </div>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Answered indicator -->
+        <div *ngIf="answers[q.id] !== undefined" class="answered-badge">
+          <i class="fas fa-check-circle"></i> Đã trả lời
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer: submit -->
+    <footer class="quiz-footer">
+      <div class="footer-status" *ngIf="!canSubmit()">
+        <i class="fas fa-info-circle"></i>
+        Còn <strong>{{ questions.length - answeredCount }}</strong> câu chưa trả lời
+      </div>
+      <div class="footer-status success" *ngIf="canSubmit()">
+        <i class="fas fa-check-circle"></i>
+        Tất cả {{ questions.length }} câu đã hoàn thành — Sẵn sàng nộp bài!
+      </div>
+
+      <button class="submit-btn"
+              [class.submit-active]="canSubmit() && !isSubmitting"
+              [disabled]="!canSubmit() || isSubmitting"
+              (click)="submitTest()">
+        <div class="submit-glow"></div>
+        <div class="submit-inner">
+          <div *ngIf="isSubmitting" class="submit-spinner"></div>
+          <span>{{ isSubmitting ? 'ĐANG GỬI KẾT QUẢ...' : 'NỘP BÀI & XEM LỘ TRÌNH' }}</span>
+          <i *ngIf="!isSubmitting" class="fas fa-arrow-right"></i>
+        </div>
+      </button>
+    </footer>
+
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!isLoading && questions.length === 0" class="empty-state">
+    <i class="fas fa-exclamation-triangle"></i>
+    <h2>Không tìm thấy bài kiểm tra</h2>
+    <p>Vui lòng thử lại hoặc chọn môn học khác.</p>
+  </div>
+
+  <!-- ══════════ RESULT MODAL ══════════ -->
+  <div *ngIf="showResultModal" class="modal-overlay">
+    <div class="modal-card" [class.modal-expanded]="gradingStatus === 'completed'">
+      
+      <!-- Close button (only when completed) -->
+      <button class="modal-close" (click)="closeModal()" *ngIf="gradingStatus !== 'grading'">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <!-- 1. GRADING STATE -->
+      <div *ngIf="gradingStatus === 'grading'" class="state-container grading-state">
+        <div class="ai-scanning-animation">
+          <div class="scan-line"></div>
+          <div class="grid-bg"></div>
+          <div class="brain-glow">
+            <i class="fas fa-brain"></i>
+          </div>
+        </div>
+        <h2 class="state-title">Đang chấm điểm cho bạn...</h2>
+        <p class="state-sub">Vui lòng chờ tí nhé, AI đang phân tích kết quả và cá nhân hóa lộ trình học của bạn.</p>
+        
+        <!-- Animated progress indicators -->
+        <div class="mini-loading-steps">
+          <div class="loading-step active"> Chấm bài trắc nghiệm</div>
+          <div class="loading-step active"> Phân tích năng lực</div>
+          <div class="loading-step active"> Soạn lộ trình bài học</div>
+        </div>
+      </div>
+
+      <!-- 2. COMPLETED STATE -->
+      <div *ngIf="gradingStatus === 'completed'" class="state-container result-state">
+        
+        <header class="result-header">
+          <div class="result-score-badge">
+            <div class="score-value">{{ submissionResult?.score }}<span>%</span></div>
+            <div class="score-label">Kết quả đạt được</div>
+          </div>
+          <div class="result-feedback">
+            <h2 class="feedback-title">Tuyệt vời! AI đã hoàn tất đánh giá.</h2>
+            <div class="ai-comment">
+              <i class="fas fa-quote-left"></i>
+              <p [innerHTML]="renderMath(submissionResult?.ai_feedback)"></p>
+            </div>
+          </div>
+        </header>
+
+        <div class="result-scroll-content">
+          <h3 class="section-divider">Chi tiết bài làm</h3>
+          
+          <div class="question-result-list">
+            <div *ngFor="let q of submissionResult?.questions; let i = index" 
+                 class="q-result-card"
+                 [class.q-wrong]="!isCorrect(q)"
+                 [class.q-right]="isCorrect(q)">
+              <div class="q-result-header">
+                <span class="q-num">Câu {{ i + 1 }}</span>
+                <span class="q-indicator" [class.wrong]="!isCorrect(q)">
+                  <i [class]="isCorrect(q) ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                  {{ isCorrect(q) ? 'Chính xác' : 'Chưa đúng' }}
+                </span>
+              </div>
+              <p class="q-text" [innerHTML]="renderMath(q.question_text)"></p>
+              
+              <div class="q-meta">
+                <div class="meta-item">
+                  <span class="meta-label">Bạn chọn:</span>
+                  <span class="meta-value user-val" [innerHTML]="renderMath(getUserChoiceText(q))"></span>
+                </div>
+                <div class="meta-item" *ngIf="!isCorrect(q)">
+                  <span class="meta-label">Đáp án đúng:</span>
+                  <span class="meta-value correct-val" [innerHTML]="renderMath(getCorrectChoiceText(q))"></span>
+                </div>
+              </div>
+
+              <!-- Explanation -->
+              <div class="q-explanation" *ngIf="q.explanation">
+                <strong>Giải thích:</strong> <span [innerHTML]="renderMath(q.explanation)"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="result-footer">
+          <button class="primary-btn pulse-btn" (click)="startLearning()">
+            <span>BẮT ĐẦU HỌC THEO LỘ TRÌNH</span>
+            <i class="fas fa-rocket"></i>
+          </button>
+        </footer>
+      </div>
+
+      <!-- 3. ERROR STATE -->
+      <div *ngIf="gradingStatus === 'error'" class="state-container error-state">
+        <i class="fas fa-exclamation-circle error-icon"></i>
+        <h2 class="state-title">Rất tiếc, đã có lỗi xảy ra</h2>
+        <p class="state-sub">Hệ thống AI gặp sự cố khi đang xử lý bài làm của bạn.</p>
+        <button class="secondary-btn" (click)="closeModal()">Thử lại sau</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

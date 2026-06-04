@@ -1,0 +1,163 @@
+<div class="admin-layout">
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+        <defs>
+          <linearGradient id="logo-grad-quest" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1565C0" />
+            <stop offset="100%" stop-color="#00BCD4" />
+          </linearGradient>
+        </defs>
+        <rect width="28" height="28" rx="8" fill="url(#logo-grad-quest)"/>
+        <path d="M14 7v14M7 14h14M9 9l10 10M19 9l-10 10" stroke="white" stroke-width="1.2" stroke-opacity="0.4"/>
+        <circle cx="14" cy="14" r="5" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.5"/>
+        <circle cx="14" cy="14" r="2" fill="white"/>
+      </svg>
+      <span class="brand-name">EduTutor <strong>AI</strong></span>
+    </div>
+    <div class="topbar-right">
+      <div class="admin-avatar-chip">
+        <div class="avatar-circle">A</div>
+        <div class="avatar-info">
+          <span class="avatar-name">Admin</span>
+          <span class="avatar-role">Quản trị viên</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <main class="page-content">
+    <div class="page-header">
+      <a routerLink="/admin/dashboard" class="back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Dashboard
+      </a>
+      <div class="header-main">
+        <h1 class="page-title">Quản lý Ngân hàng câu hỏi</h1>
+        <div class="header-actions">
+            <button class="btn-ai" (click)="openAIModal()">
+                <span class="sparkle-icon">✨</span>
+                Tạo bằng AI
+            </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Generation Modal -->
+    <div class="modal-overlay" *ngIf="showAIModal" (click)="closeAIModal()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>✨ Tạo câu hỏi bằng AI</h3>
+                <button class="btn-close" (click)="closeAIModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">Chọn bối cảnh để AI sinh bộ câu hỏi chuẩn kiến thức.</p>
+                <div class="form-grid">
+                    <div class="form-item">
+                        <label>Khối lớp</label>
+                        <select [(ngModel)]="aiForm.grade" (change)="onAIFormChange()">
+                            <option value="">-- Chọn Khối --</option>
+                            <option *ngFor="let g of grades" [value]="g">Lớp {{g}}</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <label>Môn học</label>
+                        <select [(ngModel)]="aiForm.subject" (change)="onAIFormChange()">
+                            <option value="">-- Chọn Môn --</option>
+                            <option *ngFor="let s of aiFilteredSubjects" [value]="s.name">{{s.name}}</option>
+                        </select>
+                    </div>
+                    <div class="form-item full">
+                        <label>Chương / Chủ đề</label>
+                        <select [(ngModel)]="aiForm.chapter" [disabled]="!aiChapters.length">
+                            <option value="">-- Chọn Chương (Theo Môn & Lớp) --</option>
+                            <option *ngFor="let c of aiChapters" [value]="c">{{c}}</option>
+                        </select>
+                        <small *ngIf="!aiChapters.length" class="hint">Hãy chọn Môn và Lớp trước</small>
+                    </div>
+                    <div class="form-item">
+                        <label>Số lượng câu</label>
+                        <input type="number" [(ngModel)]="aiForm.numQuestions" min="1" max="20">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" (click)="closeAIModal()">Hủy</button>
+                <button class="btn-primary" (click)="generateWithAI()" [disabled]="isGenerating">
+                    {{ isGenerating ? 'AI đang xử lý...' : 'Bắt đầu tạo' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar Filters -->
+    <div class="toolbar card">
+        <div class="filter-group">
+            <div class="filter-item">
+                <select [(ngModel)]="filterGrade" (change)="applyFilter()">
+                    <option value="">Khối lớp</option>
+                    <option *ngFor="let g of grades" [value]="g">Lớp {{g}}</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <select [(ngModel)]="filterSubject" (change)="applyFilter()">
+                    <option value="">Môn học</option>
+                    <option *ngFor="let s of filteredSubjects" [value]="s.name">{{s.name}}</option>
+                </select>
+            </div>
+            <div class="filter-item search">
+                <div class="search-input-wrap">
+                    <input type="text" placeholder="Tìm kiếm nội dung..." [(ngModel)]="searchQuery" (input)="applyFilter()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question List -->
+    <div class="question-list" *ngIf="!isLoading; else loadingTpl">
+        <div class="empty-state" *ngIf="questions.length === 0">
+            <div class="empty-icon">📂</div>
+            <p>Không tìm thấy câu hỏi nào.</p>
+        </div>
+
+        <div class="question-card card" *ngFor="let q of questions">
+            <div class="q-content">
+                <div class="q-header">
+                    <div class="q-meta">
+                        <span class="q-tag">Lớp {{q.grade_level}} • {{q.subject_name}}</span>
+                        <span class="q-bloom-tag" [ngClass]="'bloom-' + q.bloom_level">
+                            {{ getBloomName(q.bloom_level) }}
+                        </span>
+                        <span class="q-chapter">{{q.chapter_title}}</span>
+                    </div>
+                    <button class="btn-delete" (click)="deleteQuestion(q.id)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                </div>
+                
+                <div class="q-text" [innerHTML]="q.question_text | markdownRender"></div>
+                
+                <div class="answers-compact">
+                    <div class="ans-pill" *ngFor="let ans of q.answers" [class.correct]="ans.is_correct" [innerHTML]="ans.answer_text | markdownRender">
+                    </div>
+                </div>
+
+                <div class="explanation-small" *ngIf="q.explanation" [innerHTML]="'<strong>Giải thích:</strong> ' + q.explanation | markdownRender">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ng-template #loadingTpl>
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Đang tải dữ liệu...</p>
+        </div>
+    </ng-template>
+  </main>
+</div>

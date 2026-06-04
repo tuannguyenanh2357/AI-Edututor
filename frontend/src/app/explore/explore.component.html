@@ -1,0 +1,102 @@
+<div class="explore-world">
+  <!-- Interactive Background Decor -->
+  <div class="sky-layer">
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+    <div class="cloud c3"></div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="fantasy-nav">
+    <div class="nav-brand" routerLink="/dashboard">
+      <i class="fas fa-compass animate-spin-slow"></i> EduTutor Quest
+    </div>
+    <div class="nav-controls">
+      <button class="nav-btn" routerLink="/dashboard">Quay về Học tập</button>
+    </div>
+  </nav>
+
+  <div class="main-stage">
+    <!-- MAIN GALLERY (FULL WIDTH) -->
+    <div class="map-canvas gallery-mode">
+      
+      <!-- Monument Title -->
+      <div class="monument-wrapper">
+        <div class="monument-statue">
+          <i class="fas fa-university"></i>
+        </div>
+        <div class="monument-title">BẢO TÀNG HUY HIỆU</div>
+        <div class="monument-subtitle">Vinh danh những bước chân học tập</div>
+      </div>
+
+      <!-- Badge Display Nodes -->
+      <div class="badge-node" *ngFor="let badge of badges; let i = index" 
+           [class.locked]="!badge.earned"
+           [style.left.%]="10 + (i % 4) * 20"
+           [style.top.px]="250 + floor(i / 4) * 220"
+           (click)="openBadgeDetails(badge)">
+        <div class="badge-item animate-float" [style.animation-delay.s]="i * 0.2">
+          <div class="badge-icon">
+            <img *ngIf="badge.icon_url?.startsWith('http')" [src]="badge.icon_url" [alt]="badge.name">
+            <i *ngIf="!badge.icon_url?.startsWith('http')" [class]="badge.icon_url || 'fas fa-award'"></i>
+          </div>
+          <div class="badge-sparkles" *ngIf="badge.earned"></div>
+          <span class="badge-label">{{badge.name}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MINI STATS SIDEBAR -->
+    <aside class="quest-sidebar mini">
+      <div class="mystic-shelf stats-shelf">
+        <h3 class="shelf-title">Thành tựu</h3>
+        <div class="stats-container">
+          <div class="stat-box">
+            <div class="stat-num highlight">{{earnedBadgesCount}}</div>
+            <div class="stat-text">Đã đạt</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-box">
+            <div class="stat-num">{{badges.length}}</div>
+            <div class="stat-text">Tổng số</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- MODAL BADGE DETAILS -->
+  <div class="mythic-modal" *ngIf="showBadgeModal">
+    <div class="quest-parchment animate-parchment badge-detail">
+      <button class="close-parchment" (click)="closeModal()">×</button>
+      
+      <div class="parchment-header">
+        <i class="fas fa-crown"></i>
+        <h1>{{selectedBadge?.name}}</h1>
+      </div>
+
+      <div class="parchment-body">
+        <div class="badge-large-preview" [class.locked]="!selectedBadge?.earned">
+          <img *ngIf="selectedBadge?.icon_url?.startsWith('http')" [src]="selectedBadge?.icon_url" [alt]="selectedBadge?.name">
+          <i *ngIf="!selectedBadge?.icon_url?.startsWith('http')" [class]="selectedBadge?.icon_url || 'fas fa-award'"></i>
+        </div>
+        
+        <div class="badge-info">
+          <p class="badge-desc">{{selectedBadge?.description}}</p>
+          
+          <div class="requirement-box" *ngIf="!selectedBadge?.earned">
+            <h3><i class="fas fa-lock"></i> Cách để đạt được:</h3>
+            <p>{{selectedBadge?.requirement_text || 'Hoàn thành các bài học và thử thách để mở khóa huy hiệu này!'}}</p>
+          </div>
+
+          <div class="earned-box" *ngIf="selectedBadge?.earned">
+            <p class="earned-date"><i class="fas fa-calendar-check"></i> Đã đạt được vào: {{selectedBadge?.earned_date | date:'dd/MM/yyyy'}}</p>
+            <p class="congrats-text">Chúc mừng! Bạn đã khẳng định được tài năng của mình.</p>
+          </div>
+        </div>
+
+        <button class="btn-seal" (click)="closeModal()">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>

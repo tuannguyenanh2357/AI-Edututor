@@ -1,0 +1,76 @@
+<div class="container">
+  <div class="left-panel">
+    <img src="/assets/anh/sssss.jpg" alt="EduTutor AI Illustration" />
+  </div>
+
+  <div class="right-panel">
+    <div class="login-card">
+      <div class="logo-icon">
+        <i class="fa-solid fa-user-plus"></i> </div>
+
+      <h2 class="title">Tạo tài khoản mới</h2>
+      <p class="subtitle">Đăng ký để bắt đầu trải nghiệm</p>
+
+      <div class="error-message server-error" *ngIf="errorMessage" style="text-align: center; margin-bottom: 15px; font-weight: 600;">
+        {{ errorMessage }}
+      </div>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        
+        <div class="input-container">
+          <div class="input-group" [ngClass]="{'input-error': registerForm.get('fullName')?.invalid && registerForm.get('fullName')?.touched}">
+            <i class="fa-solid fa-user icon-left"></i>
+            <input type="text" formControlName="fullName" placeholder="Họ và tên của bạn" />
+          </div>
+          <div class="error-message" *ngIf="registerForm.get('fullName')?.invalid && registerForm.get('fullName')?.touched">
+            <small *ngIf="registerForm.get('fullName')?.errors?.['required']">Vui lòng nhập họ và tên.</small>
+          </div>
+        </div>
+
+        <div class="input-container">
+          <div class="input-group" [ngClass]="{'input-error': registerForm.get('email')?.invalid && registerForm.get('email')?.touched}">
+            <i class="fa-solid fa-envelope icon-left"></i>
+            <input type="email" formControlName="email" placeholder="Nhập email của bạn" />
+          </div>
+          <div class="error-message" *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
+            <small *ngIf="registerForm.get('email')?.errors?.['required']">Vui lòng nhập email.</small>
+            <small *ngIf="registerForm.get('email')?.errors?.['email']">Email không đúng định dạng.</small>
+          </div>
+        </div>
+
+        <div class="input-container">
+          <div class="input-group" [ngClass]="{'input-error': registerForm.get('password')?.invalid && registerForm.get('password')?.touched}">
+            <i class="fa-solid fa-lock icon-left"></i>
+            <input [type]="'password'" formControlName="password" placeholder="Mật khẩu" />
+          </div>
+          <div class="error-message" *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
+            <small *ngIf="registerForm.get('password')?.errors?.['required']">Vui lòng nhập mật khẩu.</small>
+            <small *ngIf="registerForm.get('password')?.errors?.['minlength']">Mật khẩu phải có ít nhất 6 ký tự.</small>
+          </div>
+        </div>
+
+        <div class="input-container">
+          <div class="input-group" [ngClass]="{'input-error': registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched}">
+            <i class="fa-solid fa-shield-check icon-left"></i>
+            <input [type]="'password'" formControlName="confirmPassword" placeholder="Xác nhận lại mật khẩu" />
+          </div>
+          <div class="error-message" *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched">
+            <small *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">Vui lòng xác nhận mật khẩu.</small>
+            <small *ngIf="registerForm.get('confirmPassword')?.errors?.['passwordMismatch']">Mật khẩu xác nhận không khớp.</small>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" [disabled]="registerForm.invalid || isLoading">
+          <span *ngIf="!isLoading">Đăng ký</span>
+          <span *ngIf="isLoading"><i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...</span>
+        </button>
+      </form>
+
+      <div class="signup-link">
+        Đã có tài khoản? <a routerLink="/login">Đăng nhập ngay</a>
+      </div>
+
+      <div class="card-bottom-line"></div>
+    </div>
+  </div>
+</div>

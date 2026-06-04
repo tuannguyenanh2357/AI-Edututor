@@ -1,0 +1,259 @@
+/* ── Wrapper ───────────────────────────────────────────────── */
+.pvp-bell-wrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── Bell Button ───────────────────────────────────────────── */
+.bell-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #5C677D;          /* Matches dashboard muted text */
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bell-btn:hover {
+  background: #F0F3F8;
+  color: #1B1E32;
+}
+
+/* When there's an active invite — bell shakes + turns amber */
+.bell-btn.has-invite {
+  color: #d97706;
+  border-color: rgba(217, 119, 6, 0.35);
+  background: rgba(217, 119, 6, 0.08);
+  animation: bell-shake 0.7s ease infinite;
+}
+
+@keyframes bell-shake {
+  0%, 100% { transform: rotate(0deg); }
+  15%       { transform: rotate(-15deg); }
+  35%       { transform: rotate(15deg); }
+  55%       { transform: rotate(-10deg); }
+  75%       { transform: rotate(10deg); }
+}
+
+/* ── Red dot badge ─────────────────────────────────────────── */
+.invite-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: dot-pulse 1.2s infinite;
+}
+
+@keyframes dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.5); opacity: 0.7; }
+}
+
+/* ── Dropdown Panel — FIXED position (escapes navbar clipping) */
+.bell-dropdown {
+  position: fixed;          /* KEY: fixed so it escapes navbar overflow */
+  width: 320px;
+  background: #0f172a;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55),
+              0 0 0 1px rgba(99, 102, 241, 0.08);
+  z-index: 99999;           /* Above everything */
+  overflow: hidden;
+  animation: drop-in 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+}
+
+@keyframes drop-in {
+  from { opacity: 0; transform: translateY(-8px) scaleY(0.92); }
+  to   { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+
+/* ── Empty State ───────────────────────────────────────────── */
+.bell-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 20px;
+  color: #475569;
+}
+
+.bell-empty i { font-size: 1.8rem; }
+.bell-empty p { font-size: 0.9rem; }
+
+/* ── Invite Card ───────────────────────────────────────────── */
+.invite-card { padding: 16px; }
+
+.invite-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fbbf24;
+  margin-bottom: 14px;
+}
+
+/* ── Challenger Row ────────────────────────────────────────── */
+.challenger-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.challenger-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  border: 2px solid rgba(99, 102, 241, 0.4);
+  flex-shrink: 0;
+}
+
+.challenger-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.challenger-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.challenger-rank {
+  font-size: 0.72rem;
+  color: #818cf8;
+  font-weight: 600;
+}
+
+/* ── Timer Badge ───────────────────────────────────────────── */
+.timer-badge {
+  flex-shrink: 0;
+  min-width: 46px;
+  text-align: center;
+  padding: 6px 10px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1.5px solid rgba(59, 130, 246, 0.35);
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #60a5fa;
+  transition: all 0.3s;
+}
+
+.timer-badge.urgent {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #f87171;
+  animation: urgent-pulse 0.4s infinite alternate;
+}
+
+@keyframes urgent-pulse {
+  from { transform: scale(1); }
+  to   { transform: scale(1.1); }
+}
+
+/* ── Progress Bar ──────────────────────────────────────────── */
+.progress-track {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 3px;
+  transition: width 0.9s linear;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+}
+
+.progress-fill.urgent-bar {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+/* ── Action Buttons ────────────────────────────────────────── */
+.action-row {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-accept,
+.btn-decline {
+  flex: 1;
+  padding: 11px 0;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-accept {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+}
+
+.btn-accept:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.55);
+}
+
+.btn-decline {
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-decline:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.btn-accept:disabled,
+.btn-decline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Spinner ───────────────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

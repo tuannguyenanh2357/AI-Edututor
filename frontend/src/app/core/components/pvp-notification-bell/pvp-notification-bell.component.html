@@ -1,0 +1,56 @@
+<div class="pvp-bell-wrapper">
+  <button #bellBtn class="bell-btn" (click)="togglePanel($event)" [class.has-invite]="invite">
+    <i class="fas fa-bell"></i>
+    <span class="invite-dot" *ngIf="invite"></span>
+  </button>
+</div>
+
+<div class="bell-dropdown"
+     *ngIf="isOpen"
+     [style.top.px]="dropdownTop"
+     [style.right.px]="dropdownRight"
+     (click)="$event.stopPropagation()">
+
+  <div class="bell-empty" *ngIf="!invite">
+    <i class="fas fa-bell-slash"></i>
+    <p>Không có thông báo mới</p>
+  </div>
+
+  <div class="invite-card" *ngIf="invite">
+    <div class="invite-header">
+      <i class="fas fa-swords invite-icon"></i>
+      <span>Lời Thách Đấu!</span>
+    </div>
+
+    <div class="challenger-row">
+      <img class="challenger-avatar"
+           [src]="getAvatarUrl(invite.challenger.username)"
+           [alt]="invite.challenger.username">
+      <div class="challenger-info">
+        <span class="challenger-name">{{ invite.challenger.username }}</span>
+        <span class="challenger-rank">{{ invite.challenger.rank || 'Tập Sự' }} · {{ invite.challenger.total_xp }} XP</span>
+      </div>
+      <div class="timer-badge" [class.urgent]="timeLeft <= 5">
+        {{ timeLeft }}s
+      </div>
+    </div>
+
+    <div class="progress-track">
+      <div class="progress-fill"
+           [style.width.%]="progressWidth"
+           [class.urgent-bar]="timeLeft <= 5">
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-accept" (click)="accept()" [disabled]="isProcessing">
+        <i class="fas fa-check"></i>
+        <span *ngIf="!isProcessing">Chấp nhận</span>
+        <span *ngIf="isProcessing" class="spinner"></span>
+      </button>
+      <button class="btn-decline" (click)="decline()" [disabled]="isProcessing">
+        <i class="fas fa-times"></i> Từ chối
+      </button>
+    </div>
+  </div>
+</div>

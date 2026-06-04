@@ -1,0 +1,194 @@
+<div class="profile-wrapper">
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="logo" routerLink="/dashboard">
+        <i class="fas fa-graduation-cap"></i> AI Tutor
+      </div>
+      <div class="nav-links">
+        <a routerLink="/dashboard">Học tập</a>
+        <a routerLink="/explore">Khám phá</a>
+        <a (click)="onQuizSelect()">Luyện tập cùng AI</a>
+      </div>
+      <div class="nav-tools">
+        <app-pvp-notification-bell></app-pvp-notification-bell>
+        <div class="points-badge"><i class="fas fa-fire"></i> {{streak}}</div>
+        <div class="user-avatar-small active" routerLink="/profile">
+          <img [src]="getAvatarUrl()" (error)="handleImageError($event)" alt="Avatar">
+        </div>
+        <button class="btn-logout" (click)="logout()">
+          <i class="fas fa-sign-out-alt"></i> Đăng xuất
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- PROFILE HEADER -->
+  <header class="profile-header">
+    <div class="container">
+      <div class="header-main">
+        <div class="user-avatar-large">
+          <img [src]="getAvatarUrl()" (error)="handleImageError($event)" alt="">
+          <div class="streak-badge-large"><i class="fas fa-fire"></i> {{streak}}</div>
+        </div>
+        <div class="user-info-large">
+          <div class="name-row">
+            <h1>{{userFullName || 'Người học'}}</h1>
+            <span class="user-badge rank-badge">{{userRank}}</span>
+            <span class="user-badge role-badge" *ngIf="userRole === 'ADMIN'">Admin</span>
+          </div>
+          <p class="user-meta">&#64;{{userUsername}} · Thành viên từ {{joinDate}}</p>
+          <div class="user-bio">
+            <span *ngIf="userBio">{{userBio}}</span>
+            <span class="bio-placeholder" *ngIf="!userBio">
+              <i class="fas fa-pencil-alt"></i> Chưa có tiểu sử — nhấn "Chỉnh sửa" để thêm.
+            </span>
+          </div>
+          <div class="profile-actions">
+            <button class="btn-edit-profile" (click)="openEditModal()">
+              <i class="fas fa-edit"></i> Chỉnh sửa hồ sơ
+            </button>
+            <button class="btn-share-profile" (click)="shareProfile()">
+              <i class="fas fa-share-alt"></i> Chia sẻ
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats thật -->
+      <div class="header-stats-grid">
+        <div class="stat-card stat-fire">
+          <div class="stat-icon"><i class="fas fa-fire"></i></div>
+          <div class="stat-value">{{streak}}</div>
+          <div class="stat-label">Streak ngày</div>
+        </div>
+        <div class="stat-card stat-purple">
+          <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+          <div class="stat-value">{{totalXp}}</div>
+          <div class="stat-label">Tổng XP</div>
+        </div>
+        <div class="stat-card stat-gold">
+          <div class="stat-icon"><i class="fas fa-gem"></i></div>
+          <div class="stat-value">{{gems}}</div>
+          <div class="stat-label">Gems</div>
+        </div>
+        <div class="stat-card stat-green">
+          <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+          <div class="stat-value">{{maxStreak}}</div>
+          <div class="stat-label">Streak cao nhất</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PROFILE CONTENT -->
+  <main class="profile-main">
+    <div class="container main-grid">
+      <!-- Môn học đang học (Dàn đều 100%) -->
+      <section class="section-card">
+        <div class="section-header">
+          <h2>Môn học đang học</h2>
+        </div>
+        <div class="tracks-list">
+          <div *ngFor="let subject of activeSubjects" class="track-mini-card">
+            <div class="track-icon-hex" [style.background]="getIconBg(subject.name)">
+              <i [class]="getIcon(subject.name)"></i>
+            </div>
+            <div class="track-details">
+              <h4>
+                {{subject.name}} 
+                <span style="font-size: 0.8rem; background: rgba(92, 87, 217, 0.1); color: #5c57d9; padding: 2px 8px; border-radius: 12px; margin-left: 8px;">Lớp {{subject.grade}}</span>
+              </h4>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div *ngIf="isLoadingSubjects" style="text-align: center; padding: 2rem 0; color: #666;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #ccc; margin-bottom: 1rem;"></i>
+            <p>Đang tải dữ liệu...</p>
+          </div>
+
+          <!-- Trạng thái trống nếu chưa có lộ trình nào -->
+          <div *ngIf="!isLoadingSubjects && (!activeSubjects || activeSubjects.length === 0)" style="text-align: center; padding: 2rem 0; color: #666;">
+            <i class="fas fa-book-reader" style="font-size: 2rem; color: #ccc; margin-bottom: 1rem;"></i>
+            <p>Bạn chưa có lộ trình học nào.</p>
+            <button class="btn-primary" routerLink="/dashboard" style="margin-top: 1rem; padding: 8px 16px;">Khám phá ngay</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL CHỈNH SỬA HỒ SƠ ĐẦY ĐỦ -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3><i class="fas fa-user-edit"></i> Chỉnh sửa hồ sơ</h3>
+      <button class="btn-close-modal" (click)="closeEditModal()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Preview avatar -->
+      <div class="modal-avatar-preview">
+        <img [src]="editForm.avatar_url || getAvatarUrl(editForm.full_name)" (error)="handleImageError($event)" alt="">
+        <p class="avatar-hint">Nhập URL ảnh bên dưới để thay đổi</p>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="fas fa-user"></i> Họ và tên</label>
+          <input type="text" [(ngModel)]="editForm.full_name" placeholder="Nguyễn Văn A">
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-at"></i> Tên đăng nhập</label>
+          <input type="text" [(ngModel)]="editForm.username" placeholder="username123">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fas fa-envelope"></i> Email</label>
+        <input type="email" [(ngModel)]="editForm.email" placeholder="email@gmail.com">
+      </div>
+
+      <div class="form-group">
+        <label><i class="fas fa-image"></i> URL ảnh đại diện</label>
+        <input type="text" [(ngModel)]="editForm.avatar_url" placeholder="https://example.com/avatar.jpg">
+      </div>
+
+      <div class="form-group">
+        <label><i class="fas fa-align-left"></i> Tiểu sử</label>
+        <textarea [(ngModel)]="editForm.bio" rows="3" placeholder="Chia sẻ một chút về bạn..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="fas fa-birthday-cake"></i> Ngày sinh</label>
+          <input type="date" [(ngModel)]="editForm.date_of_birth">
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-graduation-cap"></i> Lớp học</label>
+          <select [(ngModel)]="editForm.grade_level">
+            <option *ngFor="let g of [10,11,12]" [value]="g">Lớp {{g}}</option>
+          </select>
+        </div>
+      </div>
+
+      <div *ngIf="saveMessage" class="save-message success">
+        <i class="fas fa-check-circle"></i> {{ saveMessage }}
+      </div>
+      <div *ngIf="saveError" class="save-message error">
+        <i class="fas fa-exclamation-circle"></i> {{ saveError }}
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeEditModal()">Hủy</button>
+      <button class="btn-save" (click)="saveProfile()" [disabled]="isSaving">
+        <span *ngIf="!isSaving"><i class="fas fa-save"></i> Lưu thay đổi</span>
+        <span *ngIf="isSaving"><i class="fas fa-spinner fa-spin"></i> Đang lưu...</span>
+      </button>
+    </div>
+  </div>
+</div>

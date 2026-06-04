@@ -1,0 +1,233 @@
+<div class="learning-path-page" *ngIf="learningPath">
+  
+  <!-- Back to Dashboard Button -->
+  <a class="back-dashboard-btn animate-entrance" routerLink="/dashboard">
+    <i class="fas fa-chevron-left"></i>
+    <span>Quay về Dashboard</span>
+  </a>
+  
+  <!-- Ambient background glow -->
+  <div class="ambient-glow bg-blue"></div>
+  <div class="ambient-glow bg-purple"></div>
+
+  <!-- ══════ TOP HEADER ══════ -->
+  <header class="path-header animate-entrance">
+    <div class="header-content">
+      <div class="status-badge">
+        <span class="pulse-dot"></span>
+        Hệ thống phân tích hoàn tất
+      </div>
+      <h1 class="path-title">
+        Lộ trình học <span class="highlight">{{ learningPath.subject?.name }}</span>
+      </h1>
+      
+      <div class="path-meta">
+        <div class="meta-item">
+          <div class="meta-icon"><i class="fas fa-chess-knight"></i></div>
+          <div class="meta-text">
+            <span>Chiến lược AI</span>
+            <strong>{{ getStrategyLabel(learningPath.strategy) }}</strong>
+          </div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-icon"><i class="fas fa-graduation-cap"></i></div>
+          <div class="meta-text">
+            <span>Trình độ</span>
+            <strong>THPT (Lớp {{ learningPath.grade_level }})</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Score Sphere -->
+    <div class="score-card">
+      <div class="score-sphere">
+        <svg viewBox="0 0 100 100" class="score-ring">
+          <circle cx="50" cy="50" r="45" class="ring-track"></circle>
+          <circle cx="50" cy="50" r="45" class="ring-progress" 
+                  [style.stroke-dashoffset]="283 - (learningPath.pre_test_score / 100 * 283)"></circle>
+        </svg>
+        <div class="score-value">
+          {{ learningPath.pre_test_score }}<span>%</span>
+        </div>
+        <div class="score-label">Pre-test</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════ AI ANALYSIS MESSAGE ══════ -->
+  <section class="ai-analysis-card animate-entrance" style="--delay: 100ms">
+    <div class="ai-avatar">
+      <i class="fas fa-robot"></i>
+      <div class="avatar-ring"></div>
+    </div>
+    <div class="ai-message">
+      <h4 class="ai-title">Nhận xét từ AI Evaluator</h4>
+      <p class="ai-text">"{{ learningPath.ai_feedback }}"</p>
+    </div>
+  </section>
+
+  <!-- ══════ OVERALL PROGRESS ══════ -->
+  <section class="progress-section animate-entrance" style="--delay: 200ms">
+    <div class="progress-header">
+      <h3 class="progress-title">Tiến độ hoàn thành</h3>
+      <div class="progress-stats">
+        {{ learningPath.completed_items }} / {{ learningPath.total_items }} Bài
+      </div>
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" [style.width]="learningPath.progress_percentage + '%'"></div>
+    </div>
+  </section>
+
+  <!-- ══════ COMPLETION BANNER ══════ -->
+  <div *ngIf="learningPath.progress_percentage === 100" class="completion-banner animate-entrance" style="--delay: 250ms">
+    <div class="banner-icon">
+      <i class="fas fa-trophy text-yellow-400 text-3xl" [class.fa-award]="learningPath.post_test_score"></i>
+    </div>
+    <div class="banner-content">
+      <h3 class="text-xl font-bold text-white mb-2">
+        {{ learningPath.post_test_score ? 'Bạn đã chinh phục thành công lộ trình này!' : 'Tuyệt vời! Bạn đã hoàn thành toàn bộ lộ trình học!' }}
+      </h3>
+      
+      <!-- Nếu chưa làm post-test -->
+      <ng-container *ngIf="!learningPath.post_test_score">
+        <p class="text-gray-300 mb-4">Mọi lỗ hổng kiến thức đã được lấp đầy. Giờ là lúc kiểm chứng lại năng lực của bạn.</p>
+        <button class="btn-primary" (click)="goToPostTest()" style="padding: 10px 20px; font-size: 1rem;">
+          <i class="fas fa-play-circle mr-2"></i> Làm bài đánh giá đầu ra
+        </button>
+      </ng-container>
+
+      <!-- Nếu đã làm post-test -->
+      <ng-container *ngIf="learningPath.post_test_score">
+        <div class="post-test-result-summary">
+          <div class="score-comparison">
+            <div class="score-pill pre">Đầu vào: {{ learningPath.pre_test_score }}%</div>
+            <div class="score-pill arrow">→</div>
+            <div class="score-pill post">Đầu ra: {{ learningPath.post_test_score }}%</div>
+          </div>
+          <p class="ai-final-feedback">"{{ learningPath.post_test_ai_feedback }}"</p>
+          <div class="flex gap-2 mt-4">
+            <button class="btn-primary" (click)="goToPostTest()" style="padding: 10px 20px; font-size: 1rem;">
+              <i class="fas fa-redo mr-2"></i> Kiểm tra lại
+            </button>
+            <button class="btn-secondary" routerLink="/dashboard" style="padding: 10px 20px; font-size: 1rem;">
+              Quay về Dashboard
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- ══════ THE ROADMAP (TIMELINE) ══════ -->
+  <section class="roadmap-section">
+    <h2 class="roadmap-heading animate-entrance" style="--delay: 300ms">
+      <i class="fas fa-stream"></i> Nội dung Lộ trình
+      <span class="chapter-label" *ngIf="learningPath.chapter_title">
+        — Chương: {{ learningPath.chapter_title }}
+      </span>
+    </h2>
+
+    <div class="timeline">
+      <div *ngFor="let item of learningPath.items; let i = index" 
+           class="timeline-node animate-entrance"
+           [style.--delay]="(400 + i * 100) + 'ms'"
+           (click)="item.is_unlocked && startItem(item)"
+           style="cursor: pointer;"
+           [ngClass]="{
+             'is-completed': item.status === 'COMPLETED',
+             'is-active': item.is_unlocked && item.status !== 'COMPLETED',
+             'is-locked': !item.is_unlocked && item.status !== 'COMPLETED',
+             'mastery-red': getMilestoneColor(item) === 'mastery-red',
+             'mastery-yellow': getMilestoneColor(item) === 'mastery-yellow',
+             'mastery-green': getMilestoneColor(item) === 'mastery-green'
+           }">
+        
+        <!-- Timeline Line & Marker -->
+        <div class="node-marker">
+          <div class="marker-circle">
+            <i *ngIf="item.status === 'COMPLETED'" class="fas fa-check"></i>
+            <i *ngIf="!item.is_unlocked && item.status !== 'COMPLETED'" class="fas fa-lock"></i>
+            <span *ngIf="item.is_unlocked && item.status !== 'COMPLETED'" class="pulse-ring"></span>
+          </div>
+          <div class="marker-line" *ngIf="i < learningPath.items.length - 1"></div>
+        </div>
+
+        <!-- Node Content Card -->
+        <div class="node-card" (click)="openItem(item)">
+          <div class="node-index">{{ i + 1 }}</div>
+          
+          <div class="node-details">
+            <div class="node-badges">
+              <span class="badge type-badge" [class.is-quiz]="item.item_type === 'QUIZ'">
+                {{ item.item_type === 'LESSON' ? 'Bài học Lý thuyết' : 'Bài Đánh giá' }}
+              </span>
+              <span class="badge status-badge">
+                {{ item.status === 'COMPLETED' ? 'Đã hoàn thành' : (item.is_unlocked ? 'Sẵn sàng' : 'Khóa') }}
+              </span>
+              <!-- Mastery Level Badge -->
+              <span *ngIf="item.mastery_level" class="badge mastery-badge"
+                [ngClass]="{
+                  'mastery-red': item.mastery_level === 'RED',
+                  'mastery-yellow': item.mastery_level === 'YELLOW',
+                  'mastery-green': item.mastery_level === 'GREEN'
+                }">
+                <i class="fas" [ngClass]="{
+                  'fa-times-circle': item.mastery_level === 'RED',
+                  'fa-exclamation-circle': item.mastery_level === 'YELLOW',
+                  'fa-check-circle': item.mastery_level === 'GREEN'
+                }"></i>
+                {{ item.mastery_level === 'RED' ? 'Cần ôn lại' : (item.mastery_level === 'YELLOW' ? 'Cần luyện thêm' : 'Đã nắm') }}
+              </span>
+            </div>
+            
+            <h3 class="node-title">
+              <span *ngIf="item.lesson_number" class="lesson-number-tag">Bài {{ item.lesson_number }}</span>
+              {{ item.item_type === 'LESSON' ? (item.lesson_title || 'Bài học') : (item.quiz_title || 'Kiểm tra năng lực') }}
+            </h3>
+            
+            <!-- Removed redundant Chapter name from here as it is in the header now -->
+            <p class="node-desc chapter-info" *ngIf="!learningPath.chapter_title && item.chapter_name">
+              Chương: <strong>{{ item.chapter_name }}</strong>
+            </p>
+
+            <p class="node-desc" *ngIf="item.error_tags && item.error_tags.length > 0" style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.4; margin-top: 6px;">
+              <i class="fas fa-bullseye text-indigo-400 mr-1"></i> <strong>Trọng tâm AI giảng dạy:</strong> Khắc phục trực tiếp các lỗi sai và củng cố kiến thức:
+            </p>
+            <p class="node-desc" *ngIf="!item.error_tags || item.error_tags.length === 0" style="color: #94a3b8; font-size: 0.85rem; line-height: 1.4; margin-top: 6px;">
+              <i class="fas fa-book-open text-blue-400 mr-1"></i> <strong>Mục tiêu:</strong> Ôn tập và nắm vững kiến thức nền tảng của bài học này.
+            </p>
+
+            <!-- Show Topics List -->
+            <div class="topics-container" *ngIf="item.topics_list && item.topics_list.length > 0">
+              <span class="topics-label">Nội dung:</span>
+              <ul class="node-topics">
+                <li *ngFor="let topic of item.topics_list">{{ topic }}</li>
+              </ul>
+            </div>
+
+            <div *ngIf="item.error_tags && item.error_tags.length > 0" class="error-tags-container">
+              <span *ngFor="let tag of item.error_tags" class="error-tag">
+                <i class="fas fa-times-circle"></i> Lỗi: {{ tag }}
+              </span>
+            </div>
+          </div>
+
+          <div class="node-action">
+            <button class="action-btn" [disabled]="!item.is_unlocked && item.status !== 'COMPLETED'">
+              <i class="fas" [ngClass]="item.status === 'COMPLETED' ? 'fa-redo' : (item.is_unlocked ? 'fa-play' : 'fa-lock')"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Loading state -->
+<div *ngIf="isLoading" class="loading-full">
+  <div class="spinner"></div>
+</div>

@@ -1,0 +1,27 @@
+/* You can add global styles to this file, and also import other style files */
+@import 'ngx-toastr/toastr';
+@import "katex/dist/katex.min.css";
+
+/* ===== EXERCISM GLOBAL DESIGN TOKENS ===== */
+:root {
+  --ex-navy:         #1B1E32;
+  --ex-purple:       #5C57D9;
+  --ex-purple-light: #ebe9ff;
+  --ex-bg:           #F0F3F8;
+  --ex-card:         #FFFFFF;
+  --ex-muted:        #5C677D;
+  --ex-border:       #D8E1EB;
+  --ex-gold:         #f7c948;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--ex-bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--ex-navy);
+}
+
+a { color: inherit; }

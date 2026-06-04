@@ -1,0 +1,112 @@
+<div class="result-container">
+  <!-- Loading State -->
+  <div *ngIf="resultStatus === 'evaluating'" class="loading-overlay">
+    <div class="ai-brain-container">
+      <div class="ai-brain"></div>
+      <div class="ai-waves">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <h2>AI đang đánh giá sự tiến bộ của bạn...</h2>
+    <p>Chúng tôi đang so sánh kết quả trước và sau khi học để đưa ra nhận xét chính xác nhất.</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="resultStatus === 'error' || resultStatus === 'failed'" class="error-card">
+    <div class="error-icon">⚠️</div>
+    <h2>Rất tiếc, đã có lỗi xảy ra!</h2>
+    <p>AI không thể hoàn thành việc đánh giá kết quả vào lúc này.</p>
+    <button class="btn-primary" (click)="goToDashboard()">Quay lại Bảng điều khiển</button>
+  </div>
+
+  <!-- Completed State -->
+  <div *ngIf="resultStatus === 'completed'" class="content-wrapper animated fadeIn">
+    <!-- Header -->
+    <header class="result-header">
+      <div class="badge">KẾT QUẢ VƯỢT ẢI</div>
+      <h1>Chúc mừng bạn đã hoàn thành chương!</h1>
+      <p class="subtitle">{{ subjectName }} — {{ chapterTitle }}</p>
+    </header>
+
+    <!-- Progress Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card pre-test">
+        <span class="label">Đầu vào (Pre-test)</span>
+        <div class="score-box">
+          <span class="value">{{ preScore | number:'1.0-0' }}</span>
+          <span class="unit">%</span>
+        </div>
+      </div>
+
+      <div class="metric-card improvement">
+        <span class="label">Mức độ tiến bộ</span>
+        <div class="improvement-box" [class.positive]="improvement >= 0">
+          <span class="arrow">{{ improvement >= 0 ? '↑' : '↓' }}</span>
+          <span class="value">{{ improvement | number:'1.1-1' }}</span>
+          <span class="unit">%</span>
+        </div>
+        <div class="progress-bar-mini">
+          <div class="fill" [style.width.%]="improvement > 0 ? improvement : 0"></div>
+        </div>
+      </div>
+
+      <div class="metric-card post-test">
+        <span class="label">Đầu ra (Post-test)</span>
+        <div class="score-box">
+          <span class="value">{{ postScore | number:'1.0-0' }}</span>
+          <span class="unit">%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Feedback Section -->
+    <section class="ai-feedback-section">
+      <div class="section-title">
+        <i class="ai-icon">✨</i>
+        <h3>Nhận xét từ Gia sư AI</h3>
+      </div>
+      <div class="feedback-bubble">
+        <p>{{ aiFeedback }}</p>
+      </div>
+    </section>
+
+    <!-- Question Analysis -->
+    <section class="analysis-section">
+      <div class="section-title">
+        <h3>Chi tiết bài làm cuối chương</h3>
+      </div>
+
+      <div class="questions-list">
+        <div *ngFor="let q of questions; let i = index" class="question-item"
+          [class.correct]="userAnswers[q.id] === getCorrectAnswerId(q)"
+          [class.wrong]="userAnswers[q.id] !== getCorrectAnswerId(q)">
+          <div class="q-header">
+            <span class="q-number">Câu {{ i + 1 }}</span>
+            <span class="q-status">{{ userAnswers[q.id] === getCorrectAnswerId(q) ? 'Đúng' : 'Sai' }}</span>
+          </div>
+          <p class="q-text" [innerHTML]="renderMath(q.question_text)"></p>
+
+          <div class="answers-review">
+            <div class="choice user-choice">
+              <span class="label">Bạn chọn:</span>
+              <span class="text" [innerHTML]="renderMath(getChoiceText(q, userAnswers[q.id]))"></span>
+            </div>
+            <div *ngIf="userAnswers[q.id] !== getCorrectAnswerId(q)" class="choice correct-choice">
+              <span class="label">Đáp án đúng:</span>
+              <span class="text" [innerHTML]="renderMath(getChoiceText(q, getCorrectAnswerId(q)))"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn-secondary" (click)="goToDashboard()">Về Dashboard</button>
+      <button class="btn-outline" (click)="goBack()">Xem lộ trình</button>
+      <button class="btn-primary" (click)="retryLearningPath()">
+        <i class="retry-icon">🔄</i> Quay lại học lại & Sửa lỗi cùng AI
+      </button>
+    </div>
+  </div>
+</div>

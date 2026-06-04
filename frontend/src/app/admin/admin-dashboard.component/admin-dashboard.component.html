@@ -1,0 +1,132 @@
+<div class="admin-layout">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+        <defs>
+          <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1565C0" />
+            <stop offset="100%" stop-color="#00BCD4" />
+          </linearGradient>
+        </defs>
+        <rect width="28" height="28" rx="8" fill="url(#logo-grad)"/>
+        <path d="M14 7v14M7 14h14M9 9l10 10M19 9l-10 10" stroke="white" stroke-width="1.2" stroke-opacity="0.4"/>
+        <circle cx="14" cy="14" r="5" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.5"/>
+        <circle cx="14" cy="14" r="2" fill="white"/>
+      </svg>
+      <span class="brand-name">EduTutor <strong>AI</strong></span>
+    </div>
+    <div class="topbar-center" *ngIf="stats.newUsersThisWeek > 0" (click)="toggleNotifPopup($event)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <span class="notif-text">{{ stats.newUsersThisWeek }} ĐĂNG KÝ MỚI TUẦN NÀY</span>
+
+      <!-- Popup Thông báo -->
+      <div class="notif-popup" *ngIf="showNotifPopup" (click)="$event.stopPropagation()">
+        <div class="popup-header">Đăng ký gần đây</div>
+        <div class="popup-list">
+          <div class="popup-item" *ngFor="let reg of recentRegistrations.slice(0, 5)">
+            <div class="pop-avatar" [style.background]="reg.avatarColor">
+              {{ reg.name.charAt(0).toUpperCase() }}
+            </div>
+            <div class="pop-info">
+              <div class="pop-name">{{ reg.name }}</div>
+              <div class="pop-time">{{ reg.timeAgo }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="popup-footer">
+          <a routerLink="/admin/user-management" (click)="closeNotifPopup()">Xem tất cả người dùng</a>
+        </div>
+      </div>
+    </div>
+    <!-- Overlay mờ khi hiện popup -->
+    <div class="popup-overlay" *ngIf="showNotifPopup" (click)="closeNotifPopup()"></div>
+    <div class="topbar-right">
+      <div class="admin-avatar-chip">
+        <div class="avatar-circle">A</div>
+        <div class="avatar-info">
+          <span class="avatar-name">Admin</span>
+          <span class="avatar-role">Quản trị viên</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <main class="page-content">
+    <div class="page-header">
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Hôm nay là {{ today | date:'EEEE, dd/MM/yyyy' }}</p>
+    </div>
+
+    <!-- Stats Overview -->
+    <section class="stats-grid">
+      <div class="stat-card blue">
+        <div class="stat-icon">👥</div>
+        <div class="stat-content">
+          <span class="stat-label">Tổng người dùng</span>
+          <span class="stat-value">{{ stats.totalUsers | number }}</span>
+        </div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-icon">📝</div>
+        <div class="stat-content">
+          <span class="stat-label">Câu hỏi hôm nay</span>
+          <span class="stat-value">{{ stats.questionsToday | number }}</span>
+        </div>
+      </div>
+      <div class="stat-card emerald">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-content">
+          <span class="stat-label">Lượt thi hôm nay</span>
+          <span class="stat-value">{{ stats.quizzesToday | number }}</span>
+        </div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-icon">✨</div>
+        <div class="stat-content">
+          <span class="stat-label">Đăng ký mới</span>
+          <span class="stat-value">{{ stats.newUsersThisWeek | number }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Navigation -->
+    <h2 class="section-divider">Quản lý hệ thống</h2>
+    <section class="quick-actions">
+      <div class="action-card" routerLink="/admin/question-management">
+        <div class="action-icon-wrap q-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </div>
+        <div class="action-info">
+          <div class="action-title">Quản lý câu hỏi</div>
+          <div class="action-desc">Kho tri thức & AI generator</div>
+        </div>
+        <div class="action-arrow">→</div>
+      </div>
+
+      <div class="action-card" routerLink="/admin/user-management">
+        <div class="action-icon-wrap u-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="action-info">
+          <div class="action-title">Quản lý User</div>
+          <div class="action-desc">Học sinh & tài khoản</div>
+        </div>
+        <div class="action-arrow">→</div>
+      </div>
+    </section>
+
+
+  </main>
+</div>
