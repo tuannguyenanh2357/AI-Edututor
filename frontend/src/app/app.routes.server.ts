@@ -14,6 +14,8 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'quiz-practice/:subjectId/:docId', renderMode: RenderMode.Client },
   { path: 'pvp/battle/:id', renderMode: RenderMode.Client },
   { path: 'pvp/result/:id', renderMode: RenderMode.Client },
+  { path: 'roadmap/:subjectId/:pathId', renderMode: RenderMode.Client },
+  { path: 'roadmap/:pathId', renderMode: RenderMode.Client },
   // Tất cả các route còn lại -> Prerender
   {
     path: '**',
