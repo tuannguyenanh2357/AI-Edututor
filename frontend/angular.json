@@ -35,14 +35,7 @@
               "./node_modules/@fortawesome/fontawesome-free/css/all.min.css",
               "./node_modules/katex/dist/katex.min.css"
             ],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
-            "security": {
-              "allowedHosts": ["*"]   
-            },
-            "ssr": {
-              "entry": "src/server.ts"
-            },
+            "ssr": false,
             "prerender": false
           },
           "configurations": {
